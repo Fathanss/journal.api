@@ -1,0 +1,5 @@
+INSERT INTO students (name, username, password, class_id, created_at, updated_at) VALUES ("Andi", "andi200", "qazwsx", 1, NOW(), NOW());
+
+pr
+
+id	mapel_id	teacher_id	day	start_at	end_at	created_at	updated_at	
