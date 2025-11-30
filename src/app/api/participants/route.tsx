@@ -42,7 +42,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const [rows] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM participants"
+      `SELECT 
+            participants.id AS id, 
+            students.name  AS student_name,
+            schedule.id AS schedule_id,
+            participants.created_at AS created,
+            participants.updated_at AS updated
+           
+        FROM participants
+        INNER JOIN students
+          ON  participants.students_id = students.id;
+
+        FORM participants
+        INNER JOIN schedule
+          ON participants.schedule_id = schedule.id;
+          
+      `
     );
 
     return NextResponse.json({

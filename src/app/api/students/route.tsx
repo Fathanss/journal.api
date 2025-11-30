@@ -59,7 +59,18 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const [rows] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM students"
+      `SELECT 
+            students.id AS id, 
+            students.name AS name, 
+            class_id, 
+            master_class.name AS class_name,
+            students.created_at AS created,
+            students.updated_at AS updated
+           
+        FROM students
+        INNER JOIN master_class 
+          ON master_class.id = students.class_id;
+      `
     );
 
     return NextResponse.json({
