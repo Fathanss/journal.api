@@ -64,7 +64,29 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM journal");
+    const [rows] = await pool.query<RowDataPacket[]>
+    (`SELECT 
+            journal.id AS id, 
+            students.name AS student_name,
+            mapel.name AS mapel_name,
+            teacher.name AS teacher_name,
+            journal.check_in AS check_in,
+            journal.check_out AS check_out,
+            journal.status AS status,
+            journal.notes AS notes,
+            journal.created_at AS created,
+            journal.updated_at AS updated
+           
+        FROM journal
+        INNER JOIN participants
+          ON  participants.id = journal.participants_id
+        INNER JOIN students
+          ON  students.id = participants.students_id
+        INNER JOIN mapel
+          ON  mapel.id = mapel.id
+        INNER JOIN teacher
+          ON  teacher.id = teacher.id;`
+        );
 
     return NextResponse.json({
       status: true,

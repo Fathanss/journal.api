@@ -45,15 +45,16 @@ export async function GET(request: NextRequest) {
       `SELECT 
             participants.id AS id, 
             students.name  AS student_name,
-            schedule.id AS schedule_id,
+            schedule.date AS date,
+            schedule.start_at AS start_at,
+            schedule.end_at AS end_at,
             participants.created_at AS created,
             participants.updated_at AS updated
            
         FROM participants
         INNER JOIN students
-          ON  participants.students_id = students.id;
+          ON  participants.students_id = students.id
 
-        FORM participants
         INNER JOIN schedule
           ON participants.schedule_id = schedule.id;
           
