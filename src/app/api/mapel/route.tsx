@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name,description } = await request.json();
+    const { name, description, teacher_id } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -18,10 +18,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!teacher_id) {
+      return NextResponse.json(
+        { status: false, message: "teacher_id is required" },
+        { status: 400 }
+      );
+    }
 
     const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO mapel (name, description, created_at, updated_at) VALUES (?, ?, NOW(), NOW())",
-      [name, description]
+      "INSERT INTO mapel (name, description, teacher_id, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
+      [name, description, teacher_id]
     );
 
     return NextResponse.json({
@@ -45,7 +51,17 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM mapel");
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT 
+          mapel.id,
+  mapel.name,
+  mapel.description,
+  teacher.name AS teacher_name,
+  mapel.created_at,
+  mapel.updated_at
+FROM mapel
+INNER JOIN teacher ON mapel.teacher_id = teacher.id;`
+    );
 
     return NextResponse.json({
       status: true,
@@ -79,18 +95,17 @@ export async function DELETE(request: NextRequest) {
       [id]
     );
 
-    if (result.affectedRows > 0){ 
+    if (result.affectedRows > 0) {
       return NextResponse.json({
         status: true,
         message: "sukses menghapus data",
       });
-    }else{
+    } else {
       return NextResponse.json({
         status: false,
         message: "gagal menghapus data",
       });
     }
-      
   } catch (err) {
     console.error("Error in /api/mapel DELETE:", err);
     return NextResponse.json(

@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
     if (!username) {
         return NextResponse.json(
           { status: false, message: "Username is required" },

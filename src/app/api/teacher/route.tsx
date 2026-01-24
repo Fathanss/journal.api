@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 //id,name,username,created-at,updated-at//
 export async function POST(request: NextRequest) {
   try {
-    const { name,username,password } = await request.json();
+    const { name,username,password,skill } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -12,6 +12,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    if (!skill) {
+      return NextResponse.json(
+        { status: false, message: "Skill is required" },
+        { status: 400 }
+      );
+    } 
     if (!username) {
         return NextResponse.json(
           { status: false, message: "Username is required" },
@@ -26,8 +32,8 @@ export async function POST(request: NextRequest) {
     }
 
     const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO teacher (name, username, password, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
-      [name, username, password]
+      "INSERT INTO teacher (name, skill, username, password, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+      [name, skill, username, password]
     );
 
     return NextResponse.json({
