@@ -4,30 +4,30 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, description, teacher_id } = await request.json();
+    const { name, description, teacher_name } = await request.json();
 
     if (!name) {
       return NextResponse.json(
         { status: false, message: "Name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
     if (!description) {
       return NextResponse.json(
         { status: false, message: "Description is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    if (!teacher_id) {
+    if (!teacher_name) {
       return NextResponse.json(
-        { status: false, message: "teacher_id is required" },
-        { status: 400 }
+        { status: false, message: "teacher_name is required" },
+        { status: 400 },
       );
     }
 
     const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO mapel (name, description, teacher_id, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
-      [name, description, teacher_id]
+      "INSERT INTO mapel (name, description, teacher_name, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
+      [name, description, teacher_name],
     );
 
     return NextResponse.json({
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         status: false,
         message: err instanceof Error ? err.message : "Server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -53,14 +53,14 @@ export async function GET(request: NextRequest) {
 
     const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT 
-          mapel.id,
-  mapel.name,
-  mapel.description,
-  teacher.name AS teacher_name,
-  mapel.created_at,
-  mapel.updated_at
-FROM mapel
-INNER JOIN teacher ON mapel.teacher_id = teacher.id;`
+      mapel.id,
+      mapel.name,
+      mapel.description,
+      mapel.teacher_name,
+      mapel.created_at,
+      mapel.updated_at
+    FROM mapel
+    INNER JOIN teacher ON mapel.teacher_name = teacher.name;`,
     );
 
     return NextResponse.json({
@@ -74,7 +74,7 @@ INNER JOIN teacher ON mapel.teacher_id = teacher.id;`
         status: false,
         message: err instanceof Error ? err.message : "Server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -86,13 +86,13 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { status: false, message: "id is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const [result] = await pool.query<ResultSetHeader>(
       "DELETE FROM mapel WHERE id = ?",
-      [id]
+      [id],
     );
 
     if (result.affectedRows > 0) {
@@ -113,7 +113,7 @@ export async function DELETE(request: NextRequest) {
         status: false,
         message: err instanceof Error ? err.message : "Server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -133,7 +133,7 @@ export async function PUT(request: NextRequest) {
         status: false,
         message: err instanceof Error ? err.message : "Server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
