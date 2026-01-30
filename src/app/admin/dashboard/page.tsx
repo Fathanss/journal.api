@@ -66,11 +66,11 @@ export default function DashboardPage() {
     //line chart//
 
     const lineData = {
-    labels: ["siswa", "siswi"],
+        labels: ["100","90","80","70","60","50","40","30","20","10"],
     datasets: [
       {
-        labels: ["Siswa","Siswi"],
-        data: [6, 4],
+        label: "Nilai Siswa",
+        data: [6, 4,3,4,2,3,9,4,6,10],
         borderColor: [
             "rgba(75, 192, 192, 1)",
             "rgba(60, 484, 696, 1)"
@@ -85,25 +85,6 @@ export default function DashboardPage() {
     ],
   };
 
-  //column cart//
-  const columnData = {
-    labels: ["guru", "karyawan"],
-    datasets: [
-        {
-        labels: ["guru","karyawan"],
-        data: [6, 4],
-        borderColor: [
-            "rgba(75, 192, 192, 1)",
-            "rgba(60, 484, 696, 1)"
-        ],
-        backgroundColor: [
-            "rgba(75, 192, 192, 0.2)",
-            "rgba(60, 484, 696, 0.2)"
-        ],
-        tension: 0.3,
-      },
-    ],
-  };
 
     return (
         <div className="space-y-6">
@@ -150,17 +131,9 @@ export default function DashboardPage() {
                 </div>
                 {/* line Container */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-700 font-semibold mb-4">Jumlah Siswa/Siswi sekolah</h3>
+                    <h3 className="text-gray-700 font-semibold mb-4">Nilai siswa/siswi</h3>
                     <div className="h-[300px] flex justify-center">
                         <Line data={lineData} options={{ responsive: true, maintainAspectRatio: false }} />
-                    </div>
-                </div>
-
-                {/* column Container */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-700 font-semibold mb-4">Jumlah Siswa/Siswi sekolah</h3>
-                    <div className="h-[300px] flex justify-center">
-                        <Bar data={lineData} options={{ responsive: true, maintainAspectRatio: false }} />
                     </div>
                 </div>
             </div>
