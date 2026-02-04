@@ -1,4 +1,4 @@
-
+//http://localhost:3000/admin/dashboard//
 "use client";
 import { useEffect, useState } from "react";
 import {
@@ -69,7 +69,7 @@ export default function DashboardPage() {
         labels: ["100","90","80","70","60","50","40","30","20","10"],
     datasets: [
       {
-        label: "Nilai Siswa",
+        label: "Nilai Siswa kelas 10",
         data: [6, 4,3,4,2,3,9,4,6,10],
         borderColor: [
             "rgba(75, 192, 192, 1)",
@@ -79,6 +79,44 @@ export default function DashboardPage() {
         backgroundColor: [
             "rgba(75, 192, 192, 0.2)",
             "rgba(60, 484, 696, 0.2)"
+        ],
+        tension: 0.3,
+      },
+    ],
+  };
+  //line chart 2//
+  const lineData2 = {
+    labels: ["100","90","80","70","60","50","40","30","20","10"],
+    datasets: [ 
+        {
+        label: "Nilai Siswa kelas 11",
+        data: [5, 6,7,8,5,4,6,7,8,9],
+        borderColor: [
+            "rgba(153, 102, 255, 1)",
+            "rgba(201, 203, 207, 1)"
+        ],
+        backgroundColor: [
+            "rgba(153, 102, 255, 0.2)",
+            "rgba(201, 203, 207, 0.2)"
+        ],
+        tension: 0.3,
+      },
+    ],
+  };
+  //line chart 3//
+  const lineData3 = {
+    labels: ["100","90","80","70","60","50","40","30","20","10"],
+    datasets: [
+        {
+        label: "Nilai Siswa kelas 12",
+        data: [7, 8,6,5,4,3,2,1,4,6],
+        borderColor: [
+            "rgba(255, 159, 64, 1)",
+            "rgba(255, 205, 86, 1)"
+        ],
+        backgroundColor: [
+            "rgba(255, 159, 64, 0.2)",
+            "rgba(255, 205, 86, 0.2)"
         ],
         tension: 0.3,
       },
@@ -134,6 +172,20 @@ export default function DashboardPage() {
                     <h3 className="text-gray-700 font-semibold mb-4">Nilai siswa/siswi</h3>
                     <div className="h-[300px] flex justify-center">
                         <Line data={lineData} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                </div>
+                {/* line 2 Container */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-gray-700 font-semibold mb-4">Nilai siswa/siswi</h3>
+                    <div className="h-[300px] flex justify-center">
+                        <Line data={lineData2} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                </div>
+                {/* line 3 Container */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-gray-700 font-semibold mb-4">Nilai siswa/siswi</h3>
+                    <div className="h-[300px] flex justify-center">
+                        <Line data={lineData3} options={{ responsive: true, maintainAspectRatio: false }} />
                     </div>
                 </div>
             </div>
