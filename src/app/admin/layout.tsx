@@ -21,6 +21,7 @@ export default function AdminLayout({
 
   const menuItems = [
     { name: "Dashboard", icon: FaHome, path: "/admin/dashboard" },
+    { name: "Mapel", icon: FaHome, path: "/admin/mapel" },
   ];
 
   const handleLogout = () => {
