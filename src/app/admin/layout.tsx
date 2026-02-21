@@ -22,6 +22,7 @@ export default function AdminLayout({
   const menuItems = [
     { name: "Dashboard", icon: FaHome, path: "/admin/dashboard" },
     { name: "Mapel", icon: FaHome, path: "/admin/mapel" },
+    { name: "Master-class", icon: FaHome, path: "/admin/master-class" },
   ];
 
   const handleLogout = () => {
@@ -29,13 +30,13 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="flex h-screen linier-gradient-to-br from-slate-100 to-slate-200">
+    <div className="flex h-screen bg-linear-to-br from-slate-100 to-slate-200">
       {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-20"
         } transition-all duration-300 ease-in-out
-        linear-gradient-to-b from-fuchsia-900 to-purple-900
+        bg-linear-to-b from-fuchsia-900 to-purple-900
         text-white flex flex-col fixed md:relative z-20 h-full shadow-xl`}
       >
         {/* Header */}

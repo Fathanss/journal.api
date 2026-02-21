@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       message: "Master Class added successfully",
     });
   } catch (err) {
-    console.error("Error in /api/master-class POST:", err);
+    console.error("Error in /api/master_class POST:", err);
     return NextResponse.json(
       {
         status: false,
@@ -39,55 +39,70 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const search = searchParams.get("search") || "";
+
+    const offset = (page - 1) * limit;
+
+    /* ======================
+       WHERE (search)
+    ====================== */
+    let whereClause = "";
+    const params: any[] = [];
+
+    if (search) {
+      whereClause = `
+        WHERE name LIKE ?
+      `;
+      const keyword = `%${search}%`;
+      params.push(keyword);
+    }
+
+    /* ======================
+       TOTAL DATA COUNT
+    ====================== */
+    const [countRows] = await pool.query<RowDataPacket[]>(
+      `
+      SELECT COUNT(*) AS total
+      FROM master_class
+      ${whereClause}
+      `,
+      params
+    );
+
+    const total = countRows[0].total;
+
+    /* ======================
+       MAIN DATA QUERY
+    ====================== */
     const [rows] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM master_class"
+      `
+      SELECT
+        id,
+        name,
+        created_at,
+        updated_at
+      FROM master_class
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT ? 
+      `,
+      [...params, limit ]
     );
 
     return NextResponse.json({
       status: true,
-      datas: rows,
+      data: rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
-    console.error("Error in /api/master-class GET:", err);
-    return NextResponse.json(
-      {
-        status: false,
-        message: err instanceof Error ? err.message : "Server error",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const { id } = await request.json();
-
-    if (!id) {
-      return NextResponse.json(
-        { status: false, message: "id is required" },
-        { status: 400 }
-      );
-    }
-
-    const [result] = await pool.query<ResultSetHeader>(
-      "DELETE FROM master_class WHERE id = ?",
-      [id]
-    );
-
-    if (result.affectedRows > 0){ 
-      return NextResponse.json({
-        status: true,
-        message: "sukses menghapus data",
-      });
-    }else{
-      return NextResponse.json({
-        status: false,
-        message: "gagal menghapus data",
-      });
-    }
-  } catch (err) {
-    console.error("Error in /api/master-class DELETE:", err);
+    console.error("Error in /api/master_class GET:", err);
     return NextResponse.json(
       {
         status: false,
@@ -100,20 +115,77 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { name } = await request.json();
-
-    return NextResponse.json({
-      status: true,
-      data: "put Method",
-    });
+    const { id, name } = await request.json();
+    if (!id) {
+      return NextResponse.json(
+        { status: false, message: "id is required" },
+        { status: 400 }
+      );
+    }
+    const [result] = await pool.query<ResultSetHeader>(
+      "UPDATE master_class SET name = ?, updated_at = NOW() WHERE id = ?",
+      [name, id]
+    );
+    if (result.affectedRows > 0){ 
+      return NextResponse.json({
+        status: true,
+        message: "sukses mengupdate data",
+      });
+    }else{
+      return NextResponse.json({
+        status: false,
+        message: "gagal mengupdate data",
+      });
+    }
   } catch (err) {
-    console.error("Error in /api/products PUT:", err);
+    console.error("Error in /api/master_class PUT:", err);
     return NextResponse.json(
       {
         status: false,
         message: err instanceof Error ? err.message : "Server error",
       },
       { status: 500 }
+    );
+  }
+}
+
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+        const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json(
+        { status: false, message: "id is required" },
+        { status: 400 },
+      );
+    }
+
+    const [result] = await pool.query<ResultSetHeader>(
+      "DELETE FROM master_class WHERE id = ?",
+      [id],
+    );
+
+    if (result.affectedRows > 0) {
+      return NextResponse.json({
+        status: true,
+        message: "sukses menghapus data",
+      });
+    } else {
+      return NextResponse.json({
+        status: false,
+        message: "gagal menghapus data",
+      });
+    }
+  } catch (err) {
+    console.error("Error in /api/master_class DELETE:", err);
+    return NextResponse.json(
+      {
+        status: false,
+        message: err instanceof Error ? err.message : "Server error",
+      },
+      { status: 500 },
     );
   }
 }
