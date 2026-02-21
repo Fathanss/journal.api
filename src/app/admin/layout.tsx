@@ -29,13 +29,13 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-100 to-slate-200">
+    <div className="flex h-screen linier-gradient-to-br from-slate-100 to-slate-200">
       {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-20"
         } transition-all duration-300 ease-in-out
-        bg-gradient-to-b from-fuchsia-900 to-purple-900
+        linear-gradient-to-b from-fuchsia-900 to-purple-900
         text-white flex flex-col fixed md:relative z-20 h-full shadow-xl`}
       >
         {/* Header */}
