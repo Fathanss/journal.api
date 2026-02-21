@@ -23,6 +23,7 @@ export default function AdminLayout({
     { name: "Dashboard", icon: FaHome, path: "/admin/dashboard" },
     { name: "Mapel", icon: FaHome, path: "/admin/mapel" },
     { name: "Master-class", icon: FaHome, path: "/admin/master-class" },
+    { name: "Students", icon: FaHome, path: "/admin/students" },
   ];
 
   const handleLogout = () => {
