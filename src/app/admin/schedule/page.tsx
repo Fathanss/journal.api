@@ -12,11 +12,13 @@ interface Frame {
    date: string;
 }
 
-interface ClassOption {
+interface MapelOption {
     id: number;
-   mapel_id: number;
-   teacher_id: number;
-   date: string;
+    name: string;
+}
+interface TeacherOption {
+    id: number;
+    name: string;
 }
 
 const initialFormState: Frame = {
@@ -30,23 +32,23 @@ export default function FramesPage() {
     const [currentFrame, setCurrentFrame] = useState<Frame>(initialFormState);
     const [loading, setLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [kelasList, setKelasList] = useState<ClassOption[]>([]);
-
+    const [teacherList, setTeacherList] = useState<TeacherOption[]>([]);
+    const [mapelList, setMapelList] = useState<MapelOption[]>([]);
 
     const columns = [
         {
-            key: "name",
-            label: "Name",
+            key: "mapel_name",
+            label: "Mapel",
             render: (val: string) => val || "-"
         },
         {
-            key: "username",
-            label: "Username",
+            key: "teacher_name",
+            label: "Teacher",
             render: (val: string) => val || "-"
         },
         {
-            key: "class_name",
-            label: "Class",
+            key: "date",
+            label: "Date",
             render: (val: string) => val || "-"
         }
     ];
@@ -59,28 +61,42 @@ export default function FramesPage() {
     const handleEdit = (frame: any) => {
         setCurrentFrame({
             id: frame.id,
-            name: frame.name || "",
-            username: frame.username || "",
-            password: "", // Don't pre-fill password for security reasons
-            class_id: frame.class_id || undefined,      
+            mapel_id: frame.mapel_id || "",
+            teacher_id: frame.teacher_id || "",
+            date: frame.date || "",
         });
         setIsFormOpen(true);
     };
 
     useEffect(() => {
-      const fetchKelas = async () => {
-        try {
-          const res = await fetch("/api/master-class?limit=1000");
-          const result = await res.json();
-          if (result.status) {
-            setKelasList(result.data);
-          }
-        } catch (err) {
-          console.error("Failed to fetch kelas", err);
-        }
-      };
-  fetchKelas();
-}, []);
+        const fetchTeacher = async () => {
+            try {
+                const res = await fetch("/api/teacher?limit=1000");
+                const result = await res.json();
+                if (result.status) {
+                    setTeacherList(result.datas);
+                }
+            } catch (err) {
+                console.error("Failed to fetch teacher", err);
+            }
+        };
+        fetchTeacher();
+    }, []);
+
+    useEffect(() => {
+        const fetchMapel = async () => {
+            try {
+                const res = await fetch("/api/mapel?limit=1000");
+                const result = await res.json();
+                if (result.status) {
+                    setMapelList(result.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch mapel", err);
+            }
+        };
+        fetchMapel();
+    }, []);
 
 
 
@@ -90,7 +106,7 @@ export default function FramesPage() {
 
         try {
             const isEdit = !!currentFrame.id;
-            const url = `/api/students`;
+            const url = `/api/schedule`;
             const method = isEdit ? "PUT" : "POST";
 
             const res = await fetch(url, {
@@ -116,11 +132,11 @@ export default function FramesPage() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold mb-6 text-gray-800">Student</h1>
+            <h1 className="text-2xl font-bold mb-6 text-gray-800">Schedule</h1>
 
             <DataTable
-                title="List Students"
-                apiUrl="/api/students"
+                title="List Schedule"
+                apiUrl="/api/schedule"
                 columns={columns}
                 onCreate={handleCreate}
                 onEdit={handleEdit}
@@ -131,51 +147,47 @@ export default function FramesPage() {
             <OffcanvasForm
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
-                title={currentFrame.id ? "Edit Students" : "Create Students"}
+                title={currentFrame.id ? "Edit Schedule" : "Create Schedule"}
                 onSubmit={handleSubmit}
                 loading={loading}
             >
                 <div className="space-y-4">
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Project *</label>
-                        <select required value={currentFrame.class_id} onChange={(e)=> setCurrentFrame({ ...currentFrame, class_id:
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Teacher *</label>
+                        <select required value={currentFrame.teacher_id} onChange={(e)=> setCurrentFrame({ ...currentFrame, teacher_id:
                             Number(e.target.value) })}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500"
                             >
-                            <option value={0}>Pilih Kelas</option>
-                            {kelasList.map((kelas) => (
-                            <option key={kelas.id} value={kelas.id}>
-                                {kelas.name}
+                            <option value={0}>Pilih Guru</option>
+                            {teacherList.map((teacher) => (
+                            <option key={teacher.id} value={teacher.id}>
+                                {teacher.name}
+                            </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Mapel *</label>
+                        <select required value={currentFrame.mapel_id} onChange={(e)=> setCurrentFrame({ ...currentFrame, mapel_id:
+                            Number(e.target.value) })}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500"
+                            >
+                            <option value={0}>Pilih Mapel</option>
+                            {mapelList.map((mapel) => (
+                            <option key={mapel.id} value={mapel.id}>
+                                {mapel.name}
                             </option>
                             ))}
                         </select>
                     </div>
                     <div className="grid grid-cols-1 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                             <input
                                 type="text"
-                                value={currentFrame.mapel_id}
-                                onChange={(e) => setCurrentFrame({ ...currentFrame, name: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                            <input
-                                type="text"
-                                value={currentFrame.username}
-                                onChange={(e) => setCurrentFrame({ ...currentFrame, username: e.target.value })}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                            <input
-                                type="text"
-                                value={currentFrame.password}
-                                onChange={(e) => setCurrentFrame({ ...currentFrame, password: e.target.value })}
+                                value={currentFrame.date}
+                                onChange={(e) => setCurrentFrame({ ...currentFrame, date: e.target.value })}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500"
                             />
                         </div>

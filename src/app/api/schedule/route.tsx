@@ -80,16 +80,18 @@ export async function GET(request: NextRequest) {
     const total = countRows[0]?.total;
 
     const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT 
-            schedule.id AS id, 
+      `SELECT
+            schedule.id AS id,
+            schedule.mapel_id AS mapel_id,
+            schedule.teacher_id AS teacher_id,
             mapel.name AS mapel_name,
             teacher.name AS teacher_name,
             schedule.date AS date,
             schedule.start_at AS start_at,
-            schedule.end_at AS end_at,            
+            schedule.end_at AS end_at,
             schedule.created_at AS created,
             schedule.updated_at AS updated
-           
+
         FROM schedule
         INNER JOIN mapel ON schedule.mapel_id = mapel.id
         INNER JOIN teacher ON schedule.teacher_id = teacher.id
@@ -101,7 +103,7 @@ export async function GET(request: NextRequest) {
           
     return NextResponse.json({
       status: true,
-      datas: rows,
+      data: rows,
       pagination: {
         total,
         page,
