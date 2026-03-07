@@ -5,29 +5,29 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { participants_id,check_in,check_out,status,notes } = await request.json();
+    const { schedule_id,student_id,scan_in,scan_out,notes } = await request.json();
 
-    if (!participants_id) {
+    if (!schedule_id) {
       return NextResponse.json(
-        { status: false, message: "participants_id is required" },
+        { status: false, message: "schedule_id is required" },
         { status: 400 }
       );
     }
-    if (!check_in) {
+    if (!student_id) {
       return NextResponse.json(
-        { status: false, message: "check_in is required" },
+        { status: false, message: "student_id is required" },
         { status: 400 }
       );
     }
-     if (!check_out) {
+     if (!scan_in) {
       return NextResponse.json(
-        { status: false, message: "check_out is required" },
+        { status: false, message: "scan_in is required" },
         { status: 400 }
       );
     }
-    if (!status) {
+    if (!scan_out) {
         return NextResponse.json(
-        { status: false, message: "status is required" },
+        { status: false, message: "scan_out is required" },
         { status: 400 }
         );
     }
@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     }
 
     const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO journal (participants_id, check_in, check_out, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
-      [participants_id, check_in, check_out, status, notes]
+      "INSERT INTO journal (student_id,schedule_id, scan_in, scan_out, notes) VALUES (?, ?, ?, ?, ?)",
+      [student_id,schedule_id, scan_in, scan_out, notes]
     );
 
     return NextResponse.json({
@@ -64,33 +64,66 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const search = searchParams.get("search") || "";
+
+    const offset = (page - 1) * limit;
+
+    let whereClause = "";
+    const params: any[] = [];
+     if (search) {
+      whereClause = `
+      WHERE 
+      students.name LIKE ? OR 
+      schedule.name LIKE ?`
+      ;
+      const keyword = `%${search}%`;
+      params.push(keyword, keyword);
+    }
+    
+    const [countRows] = await pool.query<RowDataPacket[]>(
+      `
+      SELECT COUNT(*) AS total 
+      FROM journal
+      ${whereClause}
+      `,
+      params,
+    );
+
+    const total = countRows[0].total;
+
     const [rows] = await pool.query<RowDataPacket[]>
     (`SELECT 
             journal.id AS id, 
+            journal.student_id AS student_id,
+            journal.schedule_id AS schedule_id,
             students.name AS student_name,
-            mapel.name AS mapel_name,
-            teacher.name AS teacher_name,
-            journal.check_in AS check_in,
-            journal.check_out AS check_out,
-            journal.status AS status,
-            journal.notes AS notes,
-            journal.created_at AS created,
-            journal.updated_at AS updated
-           
+            schedule.id AS schedule_id,
+            journal.scan_in AS scan_in,
+            journal.scan_out AS scan_out,
+            journal.notes AS notes
+
         FROM journal
-        INNER JOIN participants
-          ON  participants.id = journal.participants_id
         INNER JOIN students
-          ON  students.id = participants.students_id
-        INNER JOIN mapel
-          ON  mapel.id = mapel.id
-        INNER JOIN teacher
-          ON  teacher.id = teacher.id;`
-        );
+          ON  students.id = journal.student_id
+        INNER JOIN schedule
+          ON  schedule.id = journal.schedule_id
+        ${whereClause}
+        LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+  
 
     return NextResponse.json({
       status: true,
-      datas: rows,
+      data: rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error("Error in /api/journal GET:", err);

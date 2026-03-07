@@ -4,7 +4,7 @@ import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
-    const { mapel_id,teacher_id,date } = await request.json();
+    const { mapel_id,teacher_id,class_id,date } = await request.json();
 
     if (!mapel_id) {
       return NextResponse.json(
@@ -24,9 +24,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
         );
     }  
+    if (!class_id) {
+      return NextResponse.json(
+        { status: false, message: "class_id is required" },
+        { status: 400 }
+      );
+    }
     const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO schedule (mapel_id, teacher_id, date, start_at, end_at, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW(), NOW(), NOW())",
-      [mapel_id, teacher_id, date]
+      "INSERT INTO schedule (mapel_id, teacher_id, class_id, date, start_at, end_at, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW(), NOW(), NOW())",
+      [mapel_id, teacher_id, class_id, date]
     );
     return NextResponse.json({
       status: true,
@@ -62,7 +68,8 @@ export async function GET(request: NextRequest) {
       WHERE 
         mapel.name LIKE ? OR 
         teacher.name LIKE ? OR 
-        schedule.date LIKE ?
+        master_class.name LIKE ? OR
+        schedule.date LIKE ? 
       `;
       const keyword = `%${search}%`;
       params.push(keyword, keyword, keyword);
@@ -86,6 +93,9 @@ export async function GET(request: NextRequest) {
             schedule.teacher_id AS teacher_id,
             mapel.name AS mapel_name,
             teacher.name AS teacher_name,
+            master_class.id AS class_id,
+            master_class.name AS class_name,
+            schedule.code AS code,
             schedule.date AS date,
             schedule.start_at AS start_at,
             schedule.end_at AS end_at,
@@ -95,6 +105,7 @@ export async function GET(request: NextRequest) {
         FROM schedule
         INNER JOIN mapel ON schedule.mapel_id = mapel.id
         INNER JOIN teacher ON schedule.teacher_id = teacher.id
+        LEFT JOIN master_class ON schedule.class_id = master_class.id
         ${whereClause}
         ORDER BY schedule.created_at DESC
         LIMIT ? OFFSET ?`,
@@ -164,16 +175,17 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { id, mapel_id, teacher_id, date } = await request.json();
+    const { id, mapel_id, teacher_id, class_id, date, start_at, end_at } = await request.json();
     if (!id) {
       return NextResponse.json(
         { status: false, message: "id is required" },
         { status: 400 }
       );
     }
+
     const [result] = await pool.query<ResultSetHeader>(
-      "UPDATE schedule SET mapel_id = ?, teacher_id = ?, date = ?, updated_at = NOW() WHERE id = ?",
-      [mapel_id, teacher_id, date, id]
+      "UPDATE schedule SET mapel_id = ?, teacher_id = ?, class_id = ?, date = ?, start_at = ?, end_at = ?, updated_at = NOW() WHERE id = ?",
+      [mapel_id, teacher_id, class_id, date, start_at, end_at, id]
     );
     if (result.affectedRows > 0) {
       return NextResponse.json({
@@ -186,10 +198,6 @@ export async function PUT(request: NextRequest) {
         message: "gagal mengupdate data",
       });
     }
-    return NextResponse.json({
-      status: true,
-      data: "put Method",
-    });
   } catch (err) {
     console.error("Error in /api/schedule PUT:", err);
     return NextResponse.json(

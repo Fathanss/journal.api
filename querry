@@ -1,0 +1,17 @@
+CREATE TABLE journal (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    schedule_id INT NOT NULL,
+    student_id INT NOT NULL,
+    scan_in DATETIME NULL,
+    scan_out DATETIME NULL,
+    notes VARCHAR(255) NULL,
+    
+    -- Foreign Key Constraints
+    CONSTRAINT fk_journal_schedule 
+        FOREIGN KEY (schedule_id) REFERENCES schedules(id)
+        ON DELETE CASCADE,
+        
+    CONSTRAINT fk_journal_student 
+        FOREIGN KEY (student_id) REFERENCES students(id)
+        ON DELETE CASCADE
+);

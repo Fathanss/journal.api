@@ -57,13 +57,68 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const search = searchParams.get("search") || "";
+
+    const offset = (page - 1) * limit;
+
+    /* ======================
+       WHERE (search)
+    ====================== */
+    let whereClause = "";
+    const params: any[] = [];
+
+    if (search) {
+      whereClause = `
+        WHERE name LIKE ?
+      `;
+      const keyword = `%${search}%`;
+      params.push(keyword);
+    }
+
+    /* ======================
+       TOTAL DATA COUNT
+    ====================== */
+    const [countRows] = await pool.query<RowDataPacket[]>(
+      `
+      SELECT COUNT(*) AS total
+      FROM teacher
+      ${whereClause}
+      `,
+      params,
+    );
+
+    const total = countRows[0].total;
+
+    /* ======================
+       MAIN DATA QUERY
+    ====================== */
+
     const [rows] = await pool.query<RowDataPacket[]>(
-      "SELECT * FROM teacher"
+      `SELECT 
+    s.id,
+    s.name,
+    s.username,
+    s.password,
+    s.skill
+FROM teacher s
+${whereClause}
+ORDER BY s.created_at DESC
+LIMIT ?
+      `,
+      [...params, limit],
     );
 
     return NextResponse.json({
       status: true,
-      datas: rows,
+      data: rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     console.error("Error in /api/teacher GET:", err);
@@ -72,7 +127,7 @@ export async function GET(request: NextRequest) {
         status: false,
         message: err instanceof Error ? err.message : "Server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

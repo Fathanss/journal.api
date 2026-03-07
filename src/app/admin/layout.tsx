@@ -22,9 +22,11 @@ export default function AdminLayout({
   const menuItems = [
     { name: "Dashboard", icon: FaHome, path: "/admin/dashboard" },
     { name: "Mapel", icon: FaHome, path: "/admin/mapel" },
-    { name: "Master-class", icon: FaHome, path: "/admin/master-class" },
+    { name: "Class", icon: FaHome, path: "/admin/master-class" },
     { name: "Students", icon: FaHome, path: "/admin/students" },
     { name: "Schedule", icon: FaHome, path: "/admin/schedule" },
+    { name: "Teacher", icon: FaHome, path: "/admin/teacher" },
+    { name: "Journal", icon: FaHome, path: "/admin/journal" },
   ];
 
   const handleLogout = () => {
