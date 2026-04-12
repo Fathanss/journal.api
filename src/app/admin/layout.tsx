@@ -27,6 +27,7 @@ export default function AdminLayout({
     { name: "Schedule", icon: FaHome, path: "/admin/schedule" },
     { name: "Teacher", icon: FaHome, path: "/admin/teacher" },
     { name: "Journal", icon: FaHome, path: "/admin/journal" },
+    { name: "Quick Scan", icon: FaHome, path: "/admin/quick-scan" },
   ];
 
   const handleLogout = () => {

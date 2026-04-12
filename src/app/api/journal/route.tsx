@@ -67,31 +67,50 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const search = searchParams.get("search") || "";
+    const student_id = parseInt(searchParams.get("student_id") || "0");
+    const date_from = searchParams.get("date_from") || "";
+    const date_to = searchParams.get("date_to") || "";
 
     const offset = (page - 1) * limit;
 
-    let whereClause = "";
+    let whereClause = "WHERE 1=1";
     const params: any[] = [];
-     if (search) {
-      whereClause = `
-      WHERE 
-      students.name LIKE ? OR 
-      schedule.name LIKE ?`
-      ;
+    
+    if (student_id > 0) {
+      whereClause += " AND journal.student_id = ?";
+      params.push(student_id);
+    }
+    
+    if (date_from) {
+      whereClause += " AND schedule.date >= ?";
+      params.push(date_from);
+    }
+    
+    if (date_to) {
+      whereClause += " AND schedule.date <= ?";
+      params.push(date_to);
+    }
+    
+    if (search) {
+      whereClause += " AND (students.name LIKE ? OR mapel.name LIKE ? OR teacher.name LIKE ? OR schedule.date LIKE ?)";
       const keyword = `%${search}%`;
-      params.push(keyword, keyword);
+      params.push(keyword, keyword, keyword, `%${search}%`);
     }
     
     const [countRows] = await pool.query<RowDataPacket[]>(
       `
       SELECT COUNT(*) AS total 
       FROM journal
+      INNER JOIN schedule ON journal.schedule_id = schedule.id
+      INNER JOIN mapel ON schedule.mapel_id = mapel.id
+      INNER JOIN teacher ON schedule.teacher_id = teacher.id
+      INNER JOIN students ON journal.student_id = students.id
       ${whereClause}
       `,
       params,
     );
 
-    const total = countRows[0].total;
+    const total = countRows[0].total as number;
 
     const [rows] = await pool.query<RowDataPacket[]>
     (`SELECT 
@@ -99,17 +118,20 @@ export async function GET(request: NextRequest) {
             journal.student_id AS student_id,
             journal.schedule_id AS schedule_id,
             students.name AS student_name,
-            schedule.id AS schedule_id,
-            journal.scan_in AS scan_in,
+            schedule.date AS tanggal,
+            mapel.name AS mapel_name,
+            teacher.name AS guru_name,
+            journal.scan_in AS waktu_presensi,
             journal.scan_out AS scan_out,
             journal.notes AS notes
 
         FROM journal
-        INNER JOIN students
-          ON  students.id = journal.student_id
-        INNER JOIN schedule
-          ON  schedule.id = journal.schedule_id
+        INNER JOIN students ON students.id = journal.student_id
+        INNER JOIN schedule ON schedule.id = journal.schedule_id
+        INNER JOIN mapel ON schedule.mapel_id = mapel.id
+        INNER JOIN teacher ON schedule.teacher_id = teacher.id
         ${whereClause}
+        ORDER BY journal.scan_in DESC
         LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );

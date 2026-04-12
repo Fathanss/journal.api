@@ -1,0 +1,60 @@
+"use client";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+
+export default function LoginPage() {
+ const [username, setUsername] = useState('');
+ const [password, setPassword] = useState('');
+ const router = useRouter();
+
+
+ const handleLogin = (e: React.FormEvent) => {
+   e.preventDefault();
+   // Dummy Logic
+   if (username === 'student' && password === 'password') {
+     router.push('/student/dashboard');
+   } else {
+     alert('Use student / password');
+   }
+ };
+
+
+ return (
+   <div className="flex h-screen items-center justify-center bg-gray-100">
+     <form onSubmit={handleLogin} className="p-8 bg-white shadow-md rounded-lg w-96">
+       <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
+       <input
+         type="text" placeholder="Username"
+         className="w-full p-2 mb-4 border rounded"
+         onChange={(e) => setUsername(e.target.value)}
+       />
+       <input
+         type="password" placeholder="Password"
+         className="w-full p-2 mb-6 border rounded"
+         onChange={(e) => setPassword(e.target.value)}
+       />
+       <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+         Login
+       </button>
+     </form>
+   </div>
+ );
+}
+
+
+
+
+Challenge : 
+1. Menyesuaikan History : 
+    a. Konten : Tanggal, Nama Pelajaran, Guru, Waktu Presensi
+    b. Search Field 
+    c. Filter Tanggal (Start date, End Date)
+3. Menyesuaikan Profile 
+   Field2 nya disesuaikan dengan yang di table Student
+4. Logout Diarahkan ke student/login
+5. Ubah tema/warna/redesign
+
+
+
+

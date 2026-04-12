@@ -173,7 +173,7 @@ export default function FramesPage() {
                         >
                             <option value={0}>Select Schedule</option>
                             {scheduleList.map((s) => (
-                                <option key={s.id} value={s.id}>{s.name}</option>
+                                <option key={s.id} value={s.id}>{}</option>
                             ))}
                         </select>
                     </div>
