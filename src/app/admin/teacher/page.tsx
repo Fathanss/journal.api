@@ -61,6 +61,10 @@ export default function FramesPage() {
         setIsFormOpen(true);
     };
 
+    const handleDelete = () => {
+        setRefreshTrigger((prev) => prev + 1);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -101,7 +105,7 @@ export default function FramesPage() {
                 columns={columns}
                 onCreate={handleCreate}
                 onEdit={handleEdit}
-                onDelete={() => { }} // DataTable handles delete via API convention
+                onDelete={handleDelete}
                 refreshTrigger={refreshTrigger}
             />
 

@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
             schedule.date AS tanggal,
             mapel.name AS mapel_name,
             teacher.name AS guru_name,
-            journal.scan_in AS waktu_presensi,
+            journal.scan_in AS scan_in,
             journal.scan_out AS scan_out,
             journal.notes AS notes
 

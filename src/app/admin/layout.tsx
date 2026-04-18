@@ -8,6 +8,13 @@ import {
   FaTimes,
   FaSignOutAlt,
   FaBars,
+  FaBook,
+  FaSchool,
+  FaUserGraduate,
+  FaCalendarAlt,
+  FaUser,
+  FaPen,
+  FaQrcode,
 } from "react-icons/fa";
 
 export default function AdminLayout({
@@ -21,13 +28,13 @@ export default function AdminLayout({
 
   const menuItems = [
     { name: "Dashboard", icon: FaHome, path: "/admin/dashboard" },
-    { name: "Mapel", icon: FaHome, path: "/admin/mapel" },
-    { name: "Class", icon: FaHome, path: "/admin/master-class" },
-    { name: "Students", icon: FaHome, path: "/admin/students" },
-    { name: "Schedule", icon: FaHome, path: "/admin/schedule" },
-    { name: "Teacher", icon: FaHome, path: "/admin/teacher" },
-    { name: "Journal", icon: FaHome, path: "/admin/journal" },
-    { name: "Quick Scan", icon: FaHome, path: "/admin/quick-scan" },
+    { name: "Mapel", icon: FaBook, path: "/admin/mapel" },
+    { name: "Class", icon: FaSchool, path: "/admin/master-class" },
+    { name: "Students", icon: FaUserGraduate, path: "/admin/students" },
+    { name: "Schedule", icon: FaCalendarAlt, path: "/admin/schedule" },
+    { name: "Teacher", icon: FaUser, path: "/admin/teacher" },
+    { name: "Journal", icon: FaPen, path: "/admin/journal" },
+    { name: "Quick Scan", icon: FaQrcode, path: "/admin/quick-scan" },
   ];
 
   const handleLogout = () => {

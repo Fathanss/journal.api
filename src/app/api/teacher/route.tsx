@@ -134,7 +134,14 @@ LIMIT ?
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { id } = await request.json();
+    // Get id from query parameter or request body
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get("id");
+    
+    if (!id) {
+      const body = await request.json();
+      id = body.id;
+    }
 
     if (!id) {
       return NextResponse.json(
@@ -173,12 +180,61 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { name } = await request.json();
+    const { id, name, username, password, skill } = await request.json();
 
-    return NextResponse.json({
-      status: true,
-      data: "put Method",
-    });
+    if (!id) {
+      return NextResponse.json(
+        { status: false, message: "id is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!name) {
+      return NextResponse.json(
+        { status: false, message: "Name is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!skill) {
+      return NextResponse.json(
+        { status: false, message: "Skill is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!username) {
+      return NextResponse.json(
+        { status: false, message: "Username is required" },
+        { status: 400 }
+      );
+    }
+
+    // If password is provided, update it. Otherwise, keep the existing password
+    let query = "";
+    let params: any[] = [];
+
+    if (password) {
+      query = "UPDATE teacher SET name = ?, username = ?, password = ?, skill = ?, updated_at = NOW() WHERE id = ?";
+      params = [name, username, password, skill, id];
+    } else {
+      query = "UPDATE teacher SET name = ?, username = ?, skill = ?, updated_at = NOW() WHERE id = ?";
+      params = [name, username, skill, id];
+    }
+
+    const [result] = await pool.query<ResultSetHeader>(query, params);
+
+    if (result.affectedRows > 0) {
+      return NextResponse.json({
+        status: true,
+        message: "sukses mengupdate data",
+      });
+    } else {
+      return NextResponse.json({
+        status: false,
+        message: "gagal mengupdate data",
+      });
+    }
   } catch (err) {
     console.error("Error in /api/teacher PUT:", err);
     return NextResponse.json(

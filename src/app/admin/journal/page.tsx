@@ -10,7 +10,7 @@ interface Frame {
     schedule_id: number;
     student_id: number;
     student_name?: string;
-    schedule_name?: string;
+    schedule_mapel?: string;
     scan_in: string;
     scan_out: string;
     notes: string;
@@ -18,7 +18,7 @@ interface Frame {
 
 interface ScheduleOption {
     id: number;
-    name: string;
+    mapel_name: string;
 }
 
 interface StudentOption {
@@ -49,7 +49,7 @@ export default function FramesPage() {
             label: "Schedule",
             render: (val: number) => {
                 const schedule = scheduleList.find((s) => s.id === val);
-                return schedule ? schedule.name : "Loading...";
+                return schedule ? schedule.mapel_name : "Loading...";
             }
         },
         {
@@ -173,7 +173,7 @@ export default function FramesPage() {
                         >
                             <option value={0}>Select Schedule</option>
                             {scheduleList.map((s) => (
-                                <option key={s.id} value={s.id}>{}</option>
+                                <option key={s.id} value={s.id}>{s.mapel_name}</option>
                             ))}
                         </select>
                     </div>

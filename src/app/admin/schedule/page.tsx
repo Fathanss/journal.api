@@ -52,6 +52,13 @@ export default function FramesPage() {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [selectedCode, setSelectedCode] = useState("");
 
+  // Generate code otomatis (angka saja)
+  const generateCode = (): string => {
+    const timestamp = Date.now().toString().slice(-8); // 8 digit terakhir dari timestamp
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0'); // 4 digit random
+    return `${timestamp}${random}`; // Contoh: 95467823 + 6789 = 954678236789
+  };
+
   
   const columns = [
 
@@ -104,7 +111,11 @@ export default function FramesPage() {
   ];
 
   const handleCreate = () => {
-    setCurrentFrame(initialFormState);
+    const newFrame = {
+      ...initialFormState,
+      code: generateCode()
+    };
+    setCurrentFrame(newFrame);
     setIsFormOpen(true);
   };
 
@@ -120,6 +131,10 @@ export default function FramesPage() {
       end_at: frame.end_at || "",
     });
     setIsFormOpen(true);
+  };
+
+  const handleDelete = () => {
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -207,7 +222,7 @@ export default function FramesPage() {
         columns={columns}
         onCreate={handleCreate}
         onEdit={handleEdit}
-        onDelete={() => {}} // DataTable handles delete via API convention
+        onDelete={handleDelete}
         refreshTrigger={refreshTrigger}
       />
 
@@ -313,10 +328,11 @@ export default function FramesPage() {
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
+                Date *
               </label>
               <input
                 type="date"
+                required
                 value={currentFrame.date}
                 onChange={(e) =>
                   setCurrentFrame({ ...currentFrame, date: e.target.value })
@@ -324,6 +340,28 @@ export default function FramesPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500"
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Code *
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                required
+                readOnly
+                value={currentFrame.code}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"
+              />
+              <button
+                type="button"
+                onClick={() => setCurrentFrame({ ...currentFrame, code: generateCode() })}
+                className="px-4 py-2 bg-fuchsia-600 text-white rounded-lg hover:bg-fuchsia-700 transition font-medium"
+              >
+                Generate
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Code dibuat otomatis (12 digit angka). Klik Generate untuk membuat code baru.</p>
           </div>
           <div className="grid grid-cols-1 gap-4">
             <div>

@@ -12,7 +12,7 @@ interface Frame {
     schedule_id: number;
     student_id: number;
     student_name?: string;
-    schedule_name?: string;
+    schedule_mapel?: string;
     scan_in: string;
     scan_out: string;
     notes: string;
@@ -20,7 +20,7 @@ interface Frame {
 
 interface ScheduleOption {
     id: number;
-    name: string;
+    mapel_name: string;
 }
 
 interface StudentOption {
@@ -51,7 +51,7 @@ export default function FramesPage() {
             label: "Schedule",
             render: (val: number) => {
                 const schedule = scheduleList.find((s) => s.id === val);
-                return schedule ? schedule.name : "Loading...";
+                return schedule ? schedule.mapel_name: "Loading...";
             }
         },
         {
@@ -81,6 +81,27 @@ export default function FramesPage() {
     // Quick Scan States
     const [quickCode, setQuickCode] = useState("");
     const [showScanner, setShowScanner] = useState(false);
+    const [lastScanResult, setLastScanResult] = useState<any>(null);
+
+    // 2. Fetch metadata (schedules and students)
+    useEffect(() => {
+        const fetchMetadata = async () => {
+            try {
+                const [resStudents, resSchedule] = await Promise.all([
+                    fetch("/api/students"),
+                    fetch("/api/schedule")
+                ]);
+                const studentsData = await resStudents.json();
+                const scheduleData = await resSchedule.json();
+
+                if (studentsData.status) setStudentsList(studentsData.data);
+                if (scheduleData.status) setScheduleList(scheduleData.data);
+            } catch (err) {
+                console.error("Failed to fetch metadata:", err);
+            }
+        };
+        fetchMetadata();
+    }, []);
 
     // Function to handle the actual API call for Scan In
     const processAutoScanIn = async (code: string) => {
@@ -96,6 +117,13 @@ export default function FramesPage() {
 
             const result = await res.json();
             if (result.status) {
+                // Store the scan result to display
+                setLastScanResult({
+                    schedule_id: result.data?.schedule_id,
+                    student_id: result.data?.student_id,
+                    scan_in: result.data?.scan_in || new Date().toISOString(),
+                    notes: result.data?.notes || ""
+                });
                 Swal.fire("Success", "Checked in successfully!", "success");
                 setQuickCode("");
                 setShowScanner(false);
@@ -178,6 +206,33 @@ export default function FramesPage() {
                     </div>
                 )}
             </div>
+
+            {/* --- SCAN RESULT SECTION --- */}
+            {lastScanResult && (
+                <div className="bg-green-50 p-6 rounded-xl shadow-sm border border-green-200">
+                    <h2 className="text-lg font-semibold mb-4 text-green-800">✓ Scan Result</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white p-4 rounded-lg border border-green-100">
+                            <p className="text-sm text-gray-600 mb-1">Schedule</p>
+                            <p className="text-lg font-semibold text-gray-800">
+                                {scheduleList.find(s => s.id === lastScanResult.schedule_id)?.mapel_name || "Loading..."}
+                            </p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-green-100">
+                            <p className="text-sm text-gray-600 mb-1">Student</p>
+                            <p className="text-lg font-semibold text-gray-800">
+                                {studentsList.find(s => s.id === lastScanResult.student_id)?.name || "Loading..."}
+                            </p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-green-100">
+                            <p className="text-sm text-gray-600 mb-1">Scan In Time</p>
+                            <p className="text-lg font-semibold text-gray-800">
+                                {new Date(lastScanResult.scan_in).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <DataTable
                 title="Recent Journals"

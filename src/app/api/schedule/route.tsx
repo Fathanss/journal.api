@@ -4,7 +4,7 @@ import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
-    const { mapel_id,teacher_id,class_id,date } = await request.json();
+    const { mapel_id, teacher_id, class_id, date, code } = await request.json();
 
     if (!mapel_id) {
       return NextResponse.json(
@@ -12,27 +12,33 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-      if (!teacher_id) {
-        return NextResponse.json(
-          { status: false, message: "teacher_id is required" },
-          { status: 400 }
-        );
+    if (!teacher_id) {
+      return NextResponse.json(
+        { status: false, message: "teacher_id is required" },
+        { status: 400 }
+      );
     }
     if (!date) {
       return NextResponse.json(
         { status: false, message: "date is required" },
         { status: 400 }
-        );
-    }  
+      );
+    }
     if (!class_id) {
       return NextResponse.json(
         { status: false, message: "class_id is required" },
         { status: 400 }
       );
     }
+    if (!code) {
+      return NextResponse.json(
+        { status: false, message: "code is required" },
+        { status: 400 }
+      );
+    }
     const [result] = await pool.query<ResultSetHeader>(
-      "INSERT INTO schedule (mapel_id, teacher_id, class_id, date, start_at, end_at, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW(), NOW(), NOW())",
-      [mapel_id, teacher_id, class_id, date]
+      "INSERT INTO schedule (mapel_id, teacher_id, class_id, date, code, start_at, end_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW(), NOW(), NOW())",
+      [mapel_id, teacher_id, class_id, date, code]
     );
     return NextResponse.json({
       status: true,
@@ -136,7 +142,14 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { id } = await request.json();
+    // Get id from query parameter or request body
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get("id");
+    
+    if (!id) {
+      const body = await request.json();
+      id = body.id;
+    }
 
     if (!id) {
       return NextResponse.json(
@@ -175,7 +188,7 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { id, mapel_id, teacher_id, class_id, date, start_at, end_at } = await request.json();
+    const { id, mapel_id, teacher_id, class_id, date, code, start_at, end_at } = await request.json();
     if (!id) {
       return NextResponse.json(
         { status: false, message: "id is required" },
@@ -184,8 +197,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const [result] = await pool.query<ResultSetHeader>(
-      "UPDATE schedule SET mapel_id = ?, teacher_id = ?, class_id = ?, date = ?, start_at = ?, end_at = ?, updated_at = NOW() WHERE id = ?",
-      [mapel_id, teacher_id, class_id, date, start_at, end_at, id]
+      "UPDATE schedule SET mapel_id = ?, teacher_id = ?, class_id = ?, date = ?, code = ?, start_at = ?, end_at = ?, updated_at = NOW() WHERE id = ?",
+      [mapel_id, teacher_id, class_id, date, code, start_at, end_at, id]
     );
     if (result.affectedRows > 0) {
       return NextResponse.json({
