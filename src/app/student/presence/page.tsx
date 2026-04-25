@@ -6,19 +6,71 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 import { CheckCircle2, Clock } from "lucide-react";
 
 interface PresenceRecord {
-  id: string;
+  id: string | number;
   time: string;
   location: string;
-  rawText?: string;
+  teacher: string;
+  subject: string;
 }
 
 export default function PresencePage() {
-  const [scans, setScans] = useState<PresenceRecord[]>([
-    { id: "1", time: "08:00 AM", location: "Main Hall" },
-    { id: "2", time: "10:30 AM", location: "Lab A" },
-  ]);
+  const [scans, setScans] = useState<PresenceRecord[]>([]);
+  const STUDENT_ID = 2;
+
+  const fetchJournalData = async () => {
+    try {
+      const response = await fetch(
+        `/api/journal-student?student_id=${STUDENT_ID}`,
+      );
+      const result = await response.json();
+
+      if (result.status) {
+        // Map the API data to your UI structure
+        const formattedData = result.data.map((item: any) => ({
+          id: item.id,
+          time: new Date(item.scan_in).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          location: item.tanggal || "No Date",
+          teacher: item.guru_name,
+          subject: item.mapel_name,
+        }));
+        setScans(formattedData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch journal:", error);
+    }
+  };
+
+  const handlePresenceScan = async (decodedText: string) => {
+    try {
+      const response = await fetch("/api/journal-student", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          schedule_code: decodedText,
+          student_id: STUDENT_ID,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.status) {
+        await fetchJournalData();
+        console.log("Attendance recorded and list refreshed");
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error("Failed to submit presence:", error);
+    }
+  };
 
   useEffect(() => {
+    fetchJournalData();
+
     // Initialize Scanner
     const scanner = new Html5QrcodeScanner(
       "reader",
@@ -28,26 +80,11 @@ export default function PresencePage() {
 
     scanner.render(
       // 1. Success Callback
-      (decodedText) => {
+      (decodedText: string) => {
         setScans((prev) => {
-          const isDuplicate = prev.some((scan) => scan.rawText === decodedText);
+          handlePresenceScan(decodedText);
 
-          if (isDuplicate) {
-            console.log("Duplicate detected, ignoring...");
-            return prev;
-          }
-
-          const newRecord: PresenceRecord = {
-            id: Math.random().toString(36).substring(2, 9),
-            rawText: decodedText,
-            time: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            location: `Scanned: ${decodedText.substring(0, 10)}...`,
-          };
-
-          return [newRecord, ...prev];
+          return [...prev];
         });
       },
       // 2. Error Callback (The missing argument)
@@ -109,7 +146,7 @@ export default function PresencePage() {
                     </div>
                     <div>
                       <p className="font-medium text-gray-800">
-                        {scan.location}
+                        {scan.subject}
                       </p>
                       <p className="text-sm text-gray-500 flex items-center gap-1">
                         <Clock size={14} /> {scan.time}

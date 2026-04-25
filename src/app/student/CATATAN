@@ -51,6 +51,10 @@ Challenge :
    Field2 nya disesuaikan dengan yang di table Student
 4. Logout Diarahkan ke student/login
 5. Ubah tema/warna/redesign
+6. ubah hanya menampilkan data hari ini saja di halaman dashboard, dan buat halaman baru untuk melihat history presensi dengan fitur search dan filter tanggal.
+7. buat histoty berguna
+8. tampilkan guru di presence
+
 
 
 

@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presentasi-Web Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0a0f0d;
+      --bg-slide: #0f1613;
+      --fg: #e8f0ec;
+      --muted: #6b8a7a;
+      --accent: #00e68a;
+      --accent-dim: rgba(0,230,138,0.12);
+      --card: rgba(0,230,138,0.06);
+      --border: rgba(0,230,138,0.15);
+      --code-bg: #060b08;
+      --red: #ff6b6b;
+      --yellow: #ffd93d;
+      --blue: #6bcbff;
+      --purple: #c792ea;
+      --orange: #ff9e64;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* === BACKGROUND ATMOSPHERE === */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .bg-layer .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.3;
+      animation: orbFloat 12s ease-in-out infinite alternate;
+    }
+    .bg-layer .orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, var(--accent), transparent 70%);
+      top: -15%; left: -10%;
+    }
+    .bg-layer .orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #00b377, transparent 70%);
+      bottom: -20%; right: -5%;
+      animation-delay: -4s;
+    }
+    .bg-layer .orb-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, #005f3f, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -8s;
+    }
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(40px, -30px) scale(1.15); }
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    /* === PROGRESS BAR === */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #00ffaa);
+      z-index: 100;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 20px var(--accent);
+    }
+
+    /* === SLIDE CONTAINER === */
+    .slides-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 80px;
+      opacity: 0;
+      transform: translateY(40px) scale(0.97);
+      transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      visibility: hidden;
+    }
+    .slide.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+      visibility: visible;
+    }
+    .slide.exit-up {
+      opacity: 0;
+      transform: translateY(-50px) scale(0.97);
+    }
+
+    /* === SLIDE INNER === */
+    .slide-inner {
+      max-width: 1000px;
+      width: 100%;
+    }
+
+    /* === SLIDE 1: COVER === */
+    .slide-cover { text-align: center; }
+    .slide-cover .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 13px;
+      color: var(--accent);
+      background: var(--accent-dim);
+      margin-bottom: 32px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .slide-cover h1 {
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 700;
+      line-height: 1.05;
+      margin-bottom: 20px;
+      letter-spacing: -2px;
+    }
+    .slide-cover h1 span {
+      background: linear-gradient(135deg, var(--accent), #00ffaa, #00ccff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .slide-cover .subtitle {
+      font-size: clamp(16px, 2vw, 22px);
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 550px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+    .slide-cover .meta {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .slide-cover .meta i {
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    /* === SLIDE 2: FEATURES === */
+    .slide-features h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+    .slide-features h2 span { color: var(--accent); }
+    .slide-features .desc {
+      color: var(--muted);
+      font-size: 16px;
+      margin-bottom: 36px;
+      font-weight: 300;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      transition: all 0.35s ease;
+      cursor: default;
+    }
+    .feature-card:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(0,230,138,0.1);
+    }
+    .feature-card .icon-wrap {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: var(--accent-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* === SLIDE 3: CODE === */
+    .slide-code h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+    .slide-code h2 span { color: var(--accent); }
+    .slide-code .desc {
+      color: var(--muted);
+      font-size: 16px;
+      margin-bottom: 28px;
+      font-weight: 300;
+    }
+    .code-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .code-container { grid-template-columns: 1fr; }
+      .slide { padding: 40px 24px; }
+    }
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0,230,138,0.03);
+    }
+    .code-header .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .code-header .dot-r { background: var(--red); }
+    .code-header .dot-y { background: var(--yellow); }
+    .code-header .dot-g { background: var(--accent); }
+    .code-header .filename {
+      margin-left: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .code-body {
+      padding: 16px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.75;
+      color: var(--fg);
+    }
+    .code-body .kw { color: var(--purple); }
+    .code-body .fn { color: var(--blue); }
+    .code-body .str { color: var(--accent); }
+    .code-body .num { color: var(--orange); }
+    .code-body .cm { color: #4a6a5a; font-style: italic; }
+    .code-body .op { color: var(--red); }
+    .code-body .var { color: var(--fg); }
+    .code-body .prop { color: var(--yellow); }
+    .code-body .tag { color: var(--red); }
+    .code-body .attr { color: var(--orange); }
+    .code-body .punc { color: var(--muted); }
+
+    /* === SLIDE 4: TECH STACK === */
+    .slide-tech h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+    .slide-tech h2 span { color: var(--accent); }
+    .slide-tech .desc {
+      color: var(--muted);
+      font-size: 16px;
+      margin-bottom: 36px;
+      font-weight: 300;
+    }
+    .tech-section {
+      margin-bottom: 28px;
+    }
+    .tech-section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .tech-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      transition: all 0.3s ease;
+    }
+    .tech-pill:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .tech-pill i {
+      font-size: 16px;
+      color: var(--accent);
+    }
+    .tech-pill .pill-label {
+      color: var(--fg);
+    }
+    .tech-pill .pill-note {
+      color: var(--muted);
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+    }
+    .method-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .method-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .method-card .method-icon {
+      font-size: 24px;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .method-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .method-card p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* === SLIDE 5: CLOSING === */
+    .slide-closing { text-align: center; }
+    .slide-closing .big-icon {
+      font-size: 48px;
+      color: var(--accent);
+      margin-bottom: 24px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+    .slide-closing h2 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+    .slide-closing h2 span { color: var(--accent); }
+    .slide-closing .tagline {
+      font-size: 18px;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 500px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+    .slide-closing .cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+    .cta-btn.primary {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+    }
+    .cta-btn.primary:hover {
+      box-shadow: 0 0 30px rgba(0,230,138,0.4);
+      transform: translateY(-2px);
+    }
+    .cta-btn.secondary {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .cta-btn.secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* === NAVIGATION === */
+    .nav-controls {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(10,15,13,0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 10px 20px;
+    }
+    .nav-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.25s ease;
+    }
+    .nav-btn:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .nav-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+    .nav-btn:disabled:hover {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--fg);
+    }
+    .slide-dots {
+      display: flex;
+      gap: 8px;
+    }
+    .slide-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      opacity: 0.3;
+      transition: all 0.4s ease;
+      cursor: pointer;
+    }
+    .slide-dot.active {
+      opacity: 1;
+      background: var(--accent);
+      width: 24px;
+      border-radius: 100px;
+    }
+    .slide-counter {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    /* === HINT === */
+    .key-hint {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0.5;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.5s ease;
+    }
+    .key-hint kbd {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    /* === ANIMATIONS ON ACTIVE === */
+    .slide.active .anim-fade {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    .slide.active .anim-fade.d1 { animation-delay: 0.1s; }
+    .slide.active .anim-fade.d2 { animation-delay: 0.2s; }
+    .slide.active .anim-fade.d3 { animation-delay: 0.3s; }
+    .slide.active .anim-fade.d4 { animation-delay: 0.4s; }
+    .slide.active .anim-fade.d5 { animation-delay: 0.5s; }
+    .slide.active .anim-fade.d6 { animation-delay: 0.6s; }
+    .slide.active .anim-fade.d7 { animation-delay: 0.7s; }
+    .slide.active .anim-fade.d8 { animation-delay: 0.8s; }
+    .slide.active .anim-fade.d9 { animation-delay: 0.9s; }
+
+    .anim-fade {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === LINE HIGHLIGHT ANIMATION === */
+    .code-line {
+      display: block;
+      padding: 0 4px;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    .code-line:hover {
+      background: rgba(0,230,138,0.06);
+    }
+
+    /* === TOAST === */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 200;
+      background: rgba(10,15,13,0.95);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toast.show { transform: translateX(0); }
+
+    /* === REDUCED MOTION === */
+    @media (prefers-reduced-motion: reduce) {
+      .slide { transition: opacity 0.3s ease; transform: none !important; }
+      .slide.active { transform: none !important; }
+      .slide.exit-up { transform: none !important; }
+      .bg-layer .orb { animation: none; }
+      .anim-fade { animation: none !important; opacity: 1; transform: none; }
+      .slide-closing .big-icon { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- Progress -->
+  <div class="progress-bar" id="progressBar" style="width: 20%"></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"><i class="fa-solid fa-circle-info"></i> <span id="toastMsg"></span></div>
+
+  <!-- Slides -->
+  <main class="slides-wrapper" role="region" aria-label="Presentasi">
+
+    <!-- SLIDE 1: COVER -->
+    <section class="slide slide-cover active" aria-label="Slide 1">
+      <div class="slide-inner">
+        <div class="badge anim-fade d1"><i class="fa-solid fa-rocket"></i> Presentasi Project</div>
+        <h1 class="anim-fade d2">Admin<span>Web</span></h1>
+        <p class="subtitle anim-fade d3">Web untuk admin sekolah agar bisa melihat seluruh data yang ada</p>
+        <div class="meta anim-fade d4">
+          <span><i class="fa-solid fa-user"></i> Fathan Raqillul A.</span>
+         
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: FEATURES -->
+    <section class="slide slide-features" aria-label="Slide 2">
+      <div class="slide-inner">
+        <h2 class="anim-fade d1">Apa aja <span>fiturnya</span>?</h2>
+        <p class="desc anim-fade d2">Dijelaskan tanpa bahasa teknis, biar semua orang paham.</p>
+        <div class="features-grid">
+          <div class="feature-card anim-fade d3">
+            <div class="icon-wrap"><i class="fa-solid fa-list-check"></i></div>
+            <h3>Catat & Atur Tugas</h3>
+            <p>Kamu bisa menuliskan semua kerjaan yang harus dikerjakan, lalu mengatur mana yang paling penting.</p>
+          </div>
+          <div class="feature-card anim-fade d4">
+            <div class="icon-wrap"><i class="fa-solid fa-bell"></i></div>
+            <h3>Pengingat Otomatis</h3>
+            <p>Aplikasi bakal ngasih tahu kamu kalau ada tugas yang udah mau mendekati deadline-nya.</p>
+          </div>
+          <div class="feature-card anim-fade d5">
+            <div class="icon-wrap"><i class="fa-solid fa-tags"></i></div>
+            <h3>Kelompokkan dengan Kategori</h3>
+            <p>Tugas bisa dibagi-bagi misalnya "Kantor", "Kuliah", "Pribadi" biar nggak campur aduk.</p>
+          </div>
+          <div class="feature-card anim-fade d6">
+            <div class="icon-wrap"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h3>Cari Tugas Langsung</h3>
+            <p>Punya ratusan tugas? Tinggal ketik kata kuncinya, langsung ketemu tanpa scroll-scroll.</p>
+          </div>
+          <div class="feature-card anim-fade d7">
+            <div class="icon-wrap"><i class="fa-solid fa-check-double"></i></div>
+            <h3>Tandai Sudah Selesai</h3>
+            <p>Setiap tugas yang selesai bisa dicentang, biar kamu tahu sudah sejauh mana progresnya.</p>
+          </div>
+          <div class="feature-card anim-fade d8">
+            <div class="icon-wrap"><i class="fa-solid fa-floppy-disk"></i></div>
+            <h3>Data Tersimpan Aman</h3>
+            <p>Semua data tugas tersimpan di perangkat kamu, nggak bakal hilang walau aplikasi ditutup.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: SAMPLE CODE -->
+    <section class="slide slide-code" aria-label="Slide 3">
+      <div class="slide-inner">
+        <h2 class="anim-fade d1">Contoh <span>kodenya</span></h2>
+        <p class="desc anim-fade d2">Gini cara kerja di balik layar — dikodein pakai JavaScript.</p>
+        <div class="code-container">
+          <!-- Code Block 1: Logic -->
+          <div class="code-block anim-fade d3">
+            <div class="code-header">
+              <span class="dot dot-r"></span>
+              <span class="dot dot-y"></span>
+              <span class="dot dot-g"></span>
+              <span class="filename">task.js</span>
+            </div>
+            <div class="code-body">
+<span class="code-line"><span class="cm">// Menambah tugas baru</span></span>
+<span class="code-line"><span class="kw">function</span> <span class="fn">addTask</span><span class="punc">(</span><span class="var">title</span><span class="punc">,</span> <span class="var">priority</span><span class="punc">)</span> <span class="punc">{</span></span>
+<span class="code-line">  <span class="kw">const</span> <span class="var">task</span> <span class="op">=</span> <span class="punc">{</span></span>
+<span class="code-line">    <span class="prop">id</span><span class="punc">:</span> <span class="fn">Date.now</span><span class="punc">(),</span></span>
+<span class="code-line">    <span class="prop">title</span><span class="punc">,</span></span>
+<span class="code-line">    <span class="prop">priority</span><span class="punc">,</span> <span class="cm">// "tinggi" | "sedang" | "rendah"</span></span>
+<span class="code-line">    <span class="prop">done</span><span class="punc">:</span> <span class="num">false</span><span class="punc">,</span></span>
+<span class="code-line">    <span class="prop">createdAt</span><span class="punc">:</span> <span class="kw">new</span> <span class="fn">Date</span><span class="punc">()</span></span>
+<span class="code-line">  <span class="punc">};</span></span>
+<span class="code-line">  <span class="var">tasks</span><span class="punc">.</span><span class="fn">push</span><span class="punc">(</span><span class="var">task</span><span class="punc">);</span></span>
+<span class="code-line">  <span class="fn">saveTasks</span><span class="punc">();</span> <span class="cm">// simpan ke localStorage</span></span>
+<span class="code-line">  <span class="fn">renderTasks</span><span class="punc">();</span> <span class="cm">// tampilkan ke layar</span></span>
+<span class="code-line"><span class="punc">}</span></span>
+            </div>
+          </div>
+
+          <!-- Code Block 2: Filter -->
+          <div class="code-block anim-fade d4">
+            <div class="code-header">
+              <span class="dot dot-r"></span>
+              <span class="dot dot-y"></span>
+              <span class="dot dot-g"></span>
+              <span class="filename">filter.js</span>
+            </div>
+            <div class="code-body">
+<span class="code-line"><span class="cm">// Filter & cari tugas</span></span>
+<span class="code-line"><span class="kw">function</span> <span class="fn">getFilteredTasks</span><span class="punc">(</span><span class="var">keyword</span><span class="punc">,</span> <span class="var">status</span><span class="punc">)</span> <span class="punc">{</span></span>
+<span class="code-line">  <span class="kw">let</span> <span class="var">result</span> <span class="op">=</span> <span class="punc">[</span><span class="op">...</span><span class="var">tasks</span><span class="punc">];</span></span>
+<span class="code-line"></span>
+<span class="code-line">  <span class="cm">// Filter berdasarkan kata kunci</span></span>
+<span class="code-line">  <span class="kw">if</span> <span class="punc">(</span><span class="var">keyword</span><span class="punc">)</span> <span class="punc">{</span></span>
+<span class="code-line">    <span class="var">result</span> <span class="op">=</span> <span class="var">result</span><span class="punc">.</span><span class="fn">filter</span><span class="punc">(</span><span class="var">t</span> <span class="op">=></span></span>
+<span class="code-line">      <span class="var">t</span><span class="punc">.</span><span class="prop">title</span><span class="punc">.</span><span class="fn">toLowerCase</span><span class="punc">()</span></span>
+<span class="code-line">        <span class="punc">.</span><span class="fn">includes</span><span class="punc">(</span><span class="var">keyword</span><span class="punc">)</span></span>
+<span class="code-line">    <span class="punc">);</span></span>
+<span class="code-line">  <span class="punc">}</span></span>
+<span class="code-line"></span>
+<span class="code-line">  <span class="cm">// Filter: belum selesai</span></span>
+<span class="code-line">  <span class="kw">if</span> <span class="punc">(</span><span class="var">status</span> <span class="op">===</span> <span class="str">"active"</span><span class="punc">)</span></span>
+<span class="code-line">    <span class="var">result</span> <span class="op">=</span> <span class="var">result</span><span class="punc">.</span><span class="fn">filter</span><span class="punc">(</span><span class="var">t</span> <span class="op">=></span> <span class="op">!</span><span class="var">t</span><span class="punc">.</span><span class="prop">done</span><span class="punc">);</span></span>
+<span class="code-line"></span>
+<span class="code-line">  <span class="kw">return</span> <span class="var">result</span><span class="punc">;</span></span>
+<span class="code-line"><span class="punc">}</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: TECH STACK -->
+    <section class="slide slide-tech" aria-label="Slide 4">
+      <div class="slide-inner">
+        <h2 class="anim-fade d1">Teknologi & <span>Tools</span></h2>
+        <p class="desc anim-fade d2">Apa saja yang dipakai buat bikin aplikasi ini.</p>
+
+        <div class="tech-section anim-fade d3">
+          <div class="tech-section-title">Bahasa & Framework</div>
+          <div class="tech-pills">
+            <div class="tech-pill"><i class="fa-brands fa-js"></i> <span class="pill-label">JavaScript</span> <span class="pill-note">(ES6+)</span></div>
+            <div class="tech-pill"><i class="fa-brands fa-html5"></i> <span class="pill-label">HTML5</span></div>
+            <div class="tech-pill"><i class="fa-brands fa-css3-alt"></i> <span class="pill-label">CSS3</span> <span class="pill-note">(Grid + Flexbox)</span></div>
+          </div>
+        </div>
+
+        <div class="tech-section anim-fade d4">
+          <div class="tech-section-title">Library & Plugin</div>
+          <div class="tech-pills">
+            <div class="tech-pill"><i class="fa-solid fa-database"></i> <span class="pill-label">LocalStorage API</span> <span class="pill-note">penyimpanan lokal</span></div>
+            <div class="tech-pill"><i class="fa-solid fa-bell"></i> <span class="pill-label">Notification API</span> <span class="pill-note">pengingat</span></div>
+            <div class="tech-pill"><i class="fa-solid fa-icons"></i> <span class="pill-label">Font Awesome 6</span> <span class="pill-note">ikon</span></div>
+          </div>
+        </div>
+
+        <div class="tech-section anim-fade d5">
+          <div class="tech-section-title">Metode Pengembangan</div>
+        </div>
+        <div class="method-grid anim-fade d6">
+          <div class="method-card">
+            <div class="method-icon"><i class="fa-solid fa-cubes"></i></div>
+            <h4>Component-Based</h4>
+            <p>Setiap bagian UI dibuat sebagai komponen terpisah yang bisa dipakai ulang.</p>
+          </div>
+          <div class="method-card">
+            <div class="method-icon"><i class="fa-solid fa-arrows-spin"></i></div>
+            <h4>Event-Driven</h4>
+            <p>Aplikasi merespons aksi user (klik, ketik) secara real-time tanpa reload.</p>
+          </div>
+          <div class="method-card">
+            <div class="method-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <h4>Separation of Concerns</h4>
+            <p>Kode logika, tampilan, dan data dipisah biar mudah dikelola.</p>
+          </div>
+          <div class="method-card">
+            <div class="method-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+            <h4>Mobile-First</h4>
+            <p>Desain diutamakan untuk HP dulu, baru diadaptasi untuk layar lebih besar.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: CLOSING -->
+    <section class="slide slide-closing" aria-label="Slide 5">
+      <div class="slide-inner">
+        <div class="big-icon anim-fade d1"><i class="fa-solid fa-hand-peace"></i></div>
+        <h2 class="anim-fade d2">Terima <span>kasih</span></h2>
+        <p class="tagline anim-fade d3">Sekian presentasi singkatnya. Kalau ada pertanyaan, silakan langsung tanya ya.</p>
+        <div class="cta-row anim-fade d4">
+          <button class="cta-btn primary" onclick="goToSlide(0)"><i class="fa-solid fa-rotate-left"></i> Mulai Ulang</button>
+          <button class="cta-btn secondary" onclick="showToast('Tautan repo bisa ditambahkan di sini')"><i class="fa-brands fa-github"></i> Lihat Kode</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Navigation -->
+  <nav class="nav-controls" aria-label="Navigasi slide">
+    <button class="nav-btn" id="btnPrev" aria-label="Slide sebelumnya" disabled><i class="fa-solid fa-chevron-left"></i></button>
+    <div class="slide-dots" id="slideDots"></div>
+    <span class="slide-counter" id="slideCounter">1 / 5</span>
+    <button class="nav-btn" id="btnNext" aria-label="Slide berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
+  </nav>
+
+  <!-- Key Hint -->
+  <div class="key-hint" id="keyHint">
+    Gunakan <kbd>&larr;</kbd> <kbd>&rarr;</kbd> atau <kbd>Spasi</kbd> untuk navigasi
+  </div>
+
+  <script>
+    // === DATA SLIDE ===
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+    let isTransitioning = false;
+
+    // === ELEMEN UI ===
+    const progressBar = document.getElementById('progressBar');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const slideDots = document.getElementById('slideDots');
+    const slideCounter = document.getElementById('slideCounter');
+    const keyHint = document.getElementById('keyHint');
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+
+    // === BUAT DOTS ===
+    for (let i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('role', 'button');
+      dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+      dot.addEventListener('click', () => goToSlide(i));
+      slideDots.appendChild(dot);
+    }
+
+    // === NAVIGASI SLIDE ===
+    function goToSlide(index) {
+      if (isTransitioning || index === currentSlide || index < 0 || index >= totalSlides) return;
+      isTransitioning = true;
+
+      const direction = index > currentSlide ? 'forward' : 'backward';
+      const oldSlide = slides[currentSlide];
+      const newSlide = slides[index];
+
+      // Animasi keluar slide lama
+      oldSlide.classList.remove('active');
+      if (direction === 'forward') {
+        oldSlide.classList.add('exit-up');
+      }
+
+      // Animasi masuk slide baru
+      setTimeout(() => {
+        oldSlide.classList.remove('exit-up');
+        // Reset animasi elemen di slide baru
+        newSlide.querySelectorAll('.anim-fade').forEach(el => {
+          el.style.animation = 'none';
+          el.offsetHeight; // trigger reflow
+          el.style.animation = '';
+        });
+        newSlide.classList.add('active');
+      }, 150);
+
+      currentSlide = index;
+      updateUI();
+
+      setTimeout(() => {
+        isTransitioning = false;
+      }, 700);
+    }
+
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+
+    // === UPDATE UI ===
+    function updateUI() {
+      // Progress bar
+      const progress = ((currentSlide + 1) / totalSlides) * 100;
+      progressBar.style.width = progress + '%';
+
+      // Dots
+      document.querySelectorAll('.slide-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentSlide);
+      });
+
+      // Counter
+      slideCounter.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+
+      // Buttons
+      btnPrev.disabled = currentSlide === 0;
+      btnNext.disabled = currentSlide === totalSlides - 1;
+
+      // Sembunyikan key hint setelah beberapa detik
+      if (currentSlide > 0) {
+        keyHint.style.opacity = '0';
+      }
+    }
+
+    // === EVENT LISTENERS ===
+    btnPrev.addEventListener('click', prevSlide);
+    btnNext.addEventListener('click', nextSlide);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(totalSlides - 1);
+      }
+    });
+
+    // Touch/swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 60) {
+        if (diff > 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
+
+    // === TOAST ===
+    let toastTimer = null;
+    function showToast(msg) {
+      toastMsg.textContent = msg;
+      toast.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // === Sembunyikan hint setelah 5 detik ===
+    setTimeout(() => {
+      keyHint.style.opacity = '0';
+    }, 5000);
+
+    // === Inisialisasi ===
+    updateUI();
+  </script>
+</body>
+</html>
