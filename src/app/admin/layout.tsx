@@ -42,27 +42,28 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="flex h-screen bg-linear-to-br from-slate-100 to-slate-200">
+    <div className="flex h-screen" style={{backgroundColor: 'var(--background)'}}>
       {/* Sidebar */}
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-20"
         } transition-all duration-300 ease-in-out
-        bg-linear-to-b from-fuchsia-900 to-purple-900
-        text-white flex flex-col fixed md:relative z-20 h-full shadow-xl`}
+        text-gray-700 flex flex-col fixed md:relative z-20 h-full shadow-xl`}
+        style={{background: 'linear-gradient(to bottom, var(--primary-light-purple), var(--secondary-light-blue))'}}
       >
         {/* Header */}
-        <div className="p-4 flex items-center justify-between border-b border-white/10">
+        <div className="p-4 flex items-center justify-between border-b" style={{borderColor: 'var(--accent-light-blue)'}}>
           <span
             className={`font-bold text-lg tracking-wide transition-opacity ${
               !sidebarOpen && "opacity-0"
             }`}
+            style={{color: 'var(--primary-light-purple)'}}
           >
             Admin Panel
           </span>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-white/10 transition"
+            className="p-2 rounded-lg hover:bg-white/20 transition"
           >
             {sidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
@@ -78,9 +79,10 @@ export default function AdminLayout({
                   className={`group flex items-center gap-3 p-3 rounded-xl transition-all duration-200
                     ${
                       pathname === item.path
-                        ? "bg-white/20 shadow-md"
-                        : "hover:bg-white/10"
+                        ? "text-white"
+                        : "text-gray-600 hover:bg-white/30"
                     }`}
+                  style={pathname === item.path ? {backgroundColor: 'var(--accent-light-blue)', color: 'white'} : {}}
                 >
                   <item.icon className="text-xl group-hover:scale-110 transition" />
                   <span
@@ -97,11 +99,12 @@ export default function AdminLayout({
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t" style={{borderColor: 'var(--accent-light-blue)'}}>
           <button
             onClick={handleLogout}
             className="group flex items-center gap-3 w-full p-3 rounded-xl
-            text-white/90 hover:bg-red-500/80 transition-all"
+            hover:bg-red-300 transition-all"
+            style={{color: 'var(--primary-light-purple)'}}
           >
             <FaSignOutAlt className="text-xl group-hover:rotate-12 transition" />
             <span

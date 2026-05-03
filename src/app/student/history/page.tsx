@@ -6,12 +6,18 @@ import { Calendar, Clock, Search, X, Loader } from 'lucide-react';
 
 interface HistoryRecord {
   id: number;
-  tanggal: string;
-  mapel_name: string;
-  guru_name: string;
-  scan_in: string;
-  scan_out?: string;
+  participants_id: number;
+  check_in: string;
+  check_out: string;
+  status: string;
   notes?: string;
+  student_name: string;
+  student_id: number;
+  mapel_name: string;
+  day: string;
+  start_at: string;
+  end_at: string;
+  teacher_name: string;
 }
 
 export default function HistoryPage() {
@@ -21,74 +27,77 @@ export default function HistoryPage() {
   const [historyData, setHistoryData] = useState<HistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [histories, setHistories] = useState<HistoryRecord[]>([]);
+  const STUDENT_ID = 2; // This should ideally come from user context or localStorage
+
+const fetchHistoryData = async () => {
+    try {
+      const response = await fetch(
+        `/api/history?student_id=${STUDENT_ID}`,
+      );
+      const result = await response.json();
+
+      if (result.status) {
+        // Map the API data to your UI structure
+        const formattedData = result.data.map((item: any) => ({
+          id: item.id,
+          time: new Date(item.scan_in).toLocaleTimeString([], {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          teacher_name: item.guru_name,
+          mapel_name: item.mapel_name,
+          day: item.tanggal ,
+          check_in: item.scan_in,
+          status: item.notes,
+
+        }));
+        setHistories(formattedData);
+        setLoading(false);
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Failed to fetch journal:", error);
+    }
+  };
 
   // Fetch history data from API
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+   
+    fetchHistoryData();
+  }, []);
 
-        // Get student_id from localStorage (set during login)
-        const userDataStr = localStorage.getItem('user_data');
-        let studentId = null;
-
-        if (userDataStr) {
-          try {
-            const userData = JSON.parse(userDataStr);
-            studentId = userData.id;
-          } catch {
-            console.error('Failed to parse user_data');
-          }
-        }
-
-        if (!studentId) {
-          setError('Student ID not found. Please log in again.');
-          setLoading(false);
-          return;
-        }
-
-        // Build query parameters
-        let queryParams = `student_id=${studentId}&limit=100`;
-
-        if (startDate) {
-          queryParams += `&date_from=${startDate}`;
-        }
-        if (endDate) {
-          queryParams += `&date_to=${endDate}`;
-        }
-        if (searchQuery) {
-          queryParams += `&search=${encodeURIComponent(searchQuery)}`;
-        }
-
-        const response = await fetch(`/api/journal?${queryParams}`);
-        const result = await response.json();
-
-        if (result.status && result.data) {
-          setHistoryData(result.data);
-        } else {
-          setError(result.message || 'Failed to fetch data');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch history data');
-        console.error('Error fetching history:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Debounce search and fetch
-    const timer = setTimeout(() => {
-      fetchHistory();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, startDate, endDate]);
-
-  // Filter data based on search (client-side for better UX)
+  // Filter data based on search and date range (client-side)
   const filteredHistory = useMemo(() => {
-    return historyData;
-  }, [historyData]);
+    let filtered = historyData;
+
+    // Filter by search query (mapel_name or teacher_name)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          (item.mapel_name?.toLowerCase().includes(query) || false) ||
+          (item.teacher_name?.toLowerCase().includes(query) || false)
+      );
+    }
+
+    // Filter by date range
+    if (startDate) {
+      const start = new Date(startDate);
+      filtered = filtered.filter((item) => new Date(item.check_in) >= start);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((item) => new Date(item.check_in) <= end);
+    }
+
+    return filtered;
+  }, [historyData, searchQuery, startDate, endDate]);
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -100,7 +109,9 @@ export default function HistoryPage() {
     if (!datetime) return '-';
     try {
       const date = new Date(datetime);
-      return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+      return date.toLocaleTimeString('id-ID', 
+        {
+          hour: '2-digit', minute: '2-digit', hour12: false });
     } catch {
       return datetime;
     }
@@ -119,48 +130,51 @@ export default function HistoryPage() {
   return (
     <MainStudentLayout>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Riwayat Presensi</h1>
-        <p className="text-gray-500">Lihat catatan presensi dan data pembelajaran Anda.</p>
+      <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 shadow-lg">
+        <h1 className="text-4xl font-black text-white mb-2 drop-shadow-lg">Riwayat Presensi</h1>
+        <p className="text-blue-100 text-lg font-medium">Lihat catatan presensi dan data pembelajaran Anda.</p>
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Filter</h2>
+      <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-8 mb-6 shadow-lg">
+        <h2 className="text-xl font-bold text-blue-900 mb-6 flex items-center">
+          <div className="w-1 h-6 bg-blue-600 rounded-full mr-3"></div>
+          Filter Data
+        </h2>
 
         {/* Search Field */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Cari Pelajaran atau Guru</label>
-          <div className="relative">
-            <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+        <div className="mb-6">
+          <label className="block text-sm font-bold text-blue-900 mb-2">Cari Pelajaran atau Guru</label>
+          <div className="relative group">
+            <Search className="absolute left-4 top-4 text-blue-500 group-hover:text-blue-600 transition-colors" size={18} />
             <input
               type="text"
               placeholder="Ketik nama pelajaran atau nama guru..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3.5 border-2 border-blue-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-300 shadow-sm hover:shadow-md"
             />
           </div>
         </div>
 
         {/* Date Range Filter */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
+            <label className="block text-sm font-bold text-blue-900 mb-2">Tanggal Mulai</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3.5 border-2 border-blue-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-300 shadow-sm hover:shadow-md"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Akhir</label>
+            <label className="block text-sm font-bold text-blue-900 mb-2">Tanggal Akhir</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full px-4 py-3.5 border-2 border-blue-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-300 shadow-sm hover:shadow-md"
             />
           </div>
         </div>
@@ -169,7 +183,7 @@ export default function HistoryPage() {
         {(searchQuery || startDate || endDate) && (
           <button
             onClick={handleClearFilters}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <X size={16} />
             Bersihkan Filter
@@ -179,68 +193,77 @@ export default function HistoryPage() {
 
       {/* Loading State */}
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader size={32} className="text-indigo-600 animate-spin" />
+        <div className="flex flex-col items-center justify-center py-16">
+          <div className="mb-4 p-4 rounded-full bg-gradient-to-r from-blue-500 to-blue-600">
+            <Loader size={40} className="text-white animate-spin" />
+          </div>
+          <p className="text-blue-700 font-semibold">Memuat data presensi Anda...</p>
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-2xl p-6 mb-6 shadow-md">
+          <p className="text-red-700 font-semibold text-lg">{error}</p>
         </div>
       )}
 
       {/* Results Count */}
       {!loading && (
-        <div className="mb-4 text-sm text-gray-600">
-          Menampilkan <span className="font-semibold">{filteredHistory.length}</span> data
+        <div className="mb-6 text-blue-900 font-bold text-lg">
+          Menampilkan <span className="text-blue-600 text-2xl">{filteredHistory.length}</span> data presensi
         </div>
       )}
 
       {/* History List */}
-      {!loading && filteredHistory.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4">
-          {filteredHistory.map((item) => (
+      {!loading && histories.length > 0 ? (
+        <div className="grid grid-cols-1 gap-5">
+          {histories.map((item) => (
             <div
               key={item.id}
-              className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+              className="bg-gradient-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
             >
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 {/* Date */}
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-gray-500 uppercase">Tanggal</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Calendar size={18} className="text-indigo-600" />
-                    <span className="font-semibold text-gray-800">{formatDate(item.tanggal)}</span>
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">📅 Tanggal</span>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Calendar size={18} className="text-blue-600" />
+                    </div>
+                    <span className="font-bold text-gray-800">{formatDate(item.check_in)}</span>
+                  </div>
+                </div>
+
+                {/* Presence Time */}
+                <div className="flex flex-col">
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">⏱️ Presensi</span>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Clock size={18} className="text-green-600" />
+                    </div>
+                    <span className="font-bold text-gray-800">{formatTime(item.check_in)}</span>
                   </div>
                 </div>
 
                 {/* Subject Name */}
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-gray-500 uppercase">Pelajaran</span>
-                  <span className="font-semibold text-gray-800 mt-1">{item.mapel_name || '-'}</span>
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">📚 Pelajaran</span>
+                  <span className="font-bold text-gray-800 bg-blue-50 px-3 py-2 rounded-lg">{item.mapel_name || '-'}</span>
                 </div>
 
                 {/* Teacher */}
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-gray-500 uppercase">Guru</span>
-                  <span className="font-semibold text-gray-800 mt-1">{item.guru_name || '-'}</span>
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">👨‍🏫 Guru</span>
+                  <span className="font-bold text-gray-800 bg-blue-50 px-3 py-2 rounded-lg">{item.teacher_name || '-'}</span>
                 </div>
 
-                {/* Presence Time */}
-                <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-gray-500 uppercase">Waktu Presensi</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock size={18} className="text-green-600" />
-                    <span className="font-semibold text-gray-800">{formatTime(item.scan_in)}</span>
-                  </div>
-                </div>
+                
 
                 {/* Status Badge */}
                 <div className="flex items-end">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                    Hadir
+                  <span className="px-4 py-2.5 rounded-full text-xs font-black text-white bg-gradient-to-r from-green-500 to-green-600 shadow-lg border-2 border-green-300">
+                    ✓ {item.status || 'Hadir'}
                   </span>
                 </div>
               </div>
@@ -248,10 +271,12 @@ export default function HistoryPage() {
           ))}
         </div>
       ) : !loading && filteredHistory.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <Search size={48} className="mx-auto text-gray-300 mb-3" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-1">Tidak ada data</h3>
-          <p className="text-gray-500">Coba sesuaikan filter atau pencarian Anda</p>
+        <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-16 text-center shadow-lg">
+          <div className="mb-4 inline-block p-4 bg-blue-100 rounded-full">
+            <Search size={48} className="text-blue-400" />
+          </div>
+          <h3 className="text-2xl font-bold text-blue-900 mb-2">Tidak ada data</h3>
+          <p className="text-blue-700 font-medium">Coba sesuaikan filter atau pencarian Anda</p>
         </div>
       ) : null}
     </MainStudentLayout>

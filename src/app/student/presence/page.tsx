@@ -20,7 +20,7 @@ export default function PresencePage() {
   const fetchJournalData = async () => {
     try {
       const response = await fetch(
-        `/api/journal-student?student_id=${STUDENT_ID}`,
+        `/api/journal-student?student_id=${STUDENT_ID}&today_only=true`,
       );
       const result = await response.json();
 
@@ -55,7 +55,7 @@ export default function PresencePage() {
           student_id: STUDENT_ID,
         }),
       });
-
+      
       const result = await response.json();
       if (result.status) {
         await fetchJournalData();
@@ -147,6 +147,9 @@ export default function PresencePage() {
                     <div>
                       <p className="font-medium text-gray-800">
                         {scan.subject}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {scan.teacher}
                       </p>
                       <p className="text-sm text-gray-500 flex items-center gap-1">
                         <Clock size={14} /> {scan.time}

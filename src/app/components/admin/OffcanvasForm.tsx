@@ -69,18 +69,20 @@ export default function OffcanvasForm({
                     </div>
 
                     {/* Footer */}
-                    <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-4">
+                    <div className="p-6 border-t bg-gray-50 flex justify-end gap-4" style={{borderColor: 'var(--primary-light-blue)', backgroundColor: 'var(--background)'}}>
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                            style={{color: 'var(--foreground)'}}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 bg-fuchsia-600 text-white rounded-lg hover:bg-fuchsia-700 font-medium flex items-center gap-2 disabled:opacity-70"
+                            className="px-4 py-2 text-white rounded-lg hover:opacity-90 font-medium flex items-center gap-2 disabled:opacity-70"
+                            style={{backgroundColor: 'var(--accent-light-blue)'}}
                         >
                             <FaSave />
                             {loading ? "Saving..." : "Save Changes"}

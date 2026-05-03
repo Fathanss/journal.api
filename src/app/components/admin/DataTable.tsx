@@ -118,13 +118,19 @@ export default function DataTable({
                             placeholder="Search..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
+                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg outline-none transition-all duration-300"
+                            style={{
+                                color: 'var(--foreground)',
+                                boxShadow: `0 0 0 2px var(--accent-light-blue)`,
+                                boxShadowOnFocus: 'inset 0 0 0 2px var(--accent-light-blue)'
+                            }}
                         />
                     </div>
                     {onExport && (
                         <button
                             onClick={onExport}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg transition-colors hover:opacity-90"
+                            style={{backgroundColor: 'var(--primary-light-blue)'}}
                         >
                             <span>Export</span>
                         </button>
@@ -132,7 +138,8 @@ export default function DataTable({
                     {onCreate && (
                         <button
                             onClick={onCreate}
-                            className="flex items-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-4 py-2 rounded-lg transition-colors"
+                            className="flex items-center gap-2 text-white px-4 py-2 rounded-lg transition-colors hover:opacity-90"
+                            style={{backgroundColor: 'var(--accent-light-blue)'}}
                         >
                             <FaPlus /> <span>New</span>
                         </button>

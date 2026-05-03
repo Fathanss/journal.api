@@ -3,76 +3,6 @@ import pool from "@/app/lib/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
-  try {
-    const { schedule_code, student_id } = await request.json();
-
-    if (!schedule_code) {
-      return NextResponse.json(
-        { status: false, message: "schedule_code is required" },
-        { status: 400 },
-      );
-    }
-    if (!student_id) {
-      return NextResponse.json(
-        { status: false, message: "student_id is required" },
-        { status: 400 },
-      );
-    }
-
-    const [schedules] = await pool.query<RowDataPacket[]>(
-      "SELECT id FROM schedule WHERE code = ?",
-      [schedule_code],
-    );
-
-    if (schedules.length === 0) {
-      return NextResponse.json(
-        { status: false, message: "Invalid schedule code" },
-        { status: 404 },
-      );
-    }
-
-    const schedule_id = schedules[0].id;
-
-    const [result] = await pool.query<ResultSetHeader>(
-      `INSERT INTO journal (student_id, schedule_id, scan_in) 
-   SELECT ?, ?, NOW() 
-   FROM DUAL 
-   WHERE NOT EXISTS (
-     SELECT 1 FROM journal 
-     WHERE student_id = ? AND schedule_id = ?
-   )`,
-      [student_id, schedule_id, student_id, schedule_id],
-    );
-
-    // Note: If result.affectedRows is 0, it means it was a duplicate.
-    if (result.affectedRows === 0) {
-      return NextResponse.json(
-        {
-          status: false,
-          message: "You have already scanned for this schedule.",
-        },
-        { status: 409 }, // Conflict
-      );
-    }
-
-    return NextResponse.json({
-      status: true,
-      id: result.insertId,
-      message: "journal added successfully",
-    });
-  } catch (err) {
-    console.error("Error in /api/journal POST:", err);
-    return NextResponse.json(
-      {
-        status: false,
-        message: err instanceof Error ? err.message : "Server error",
-      },
-      { status: 500 },
-    );
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -132,7 +62,7 @@ export async function GET(request: NextRequest) {
       data: rows,
     });
   } catch (err) {
-    console.error("Error in /api/journal GET:", err);
+    console.error("Error in /api/history GET:", err);
     return NextResponse.json(
       {
         status: false,
