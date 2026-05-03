@@ -41,13 +41,6 @@ const fetchHistoryData = async () => {
         // Map the API data to your UI structure
         const formattedData = result.data.map((item: any) => ({
           id: item.id,
-          time: new Date(item.scan_in).toLocaleTimeString([], {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
           teacher_name: item.guru_name,
           mapel_name: item.mapel_name,
           day: item.tanggal ,
@@ -72,7 +65,7 @@ const fetchHistoryData = async () => {
 
   // Filter data based on search and date range (client-side)
   const filteredHistory = useMemo(() => {
-    let filtered = historyData;
+    let filtered = histories;
 
     // Filter by search query (mapel_name or teacher_name)
     if (searchQuery.trim()) {
@@ -96,8 +89,8 @@ const fetchHistoryData = async () => {
       filtered = filtered.filter((item) => new Date(item.check_in) <= end);
     }
 
-    return filtered;
-  }, [historyData, searchQuery, startDate, endDate]);
+    return filtered;//filtern data//
+  }, [histories, searchQuery, startDate, endDate]);
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -111,7 +104,7 @@ const fetchHistoryData = async () => {
       const date = new Date(datetime);
       return date.toLocaleTimeString('id-ID', 
         {
-          hour: '2-digit', minute: '2-digit', hour12: false });
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     } catch {
       return datetime;
     }
@@ -130,13 +123,13 @@ const fetchHistoryData = async () => {
   return (
     <MainStudentLayout>
       {/* Header */}
-      <div className="mb-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 shadow-lg">
+      <div className="mb-8 bg-linear-to-r from-blue-600 to-blue-700 rounded-2xl p-8 shadow-lg">
         <h1 className="text-4xl font-black text-white mb-2 drop-shadow-lg">Riwayat Presensi</h1>
         <p className="text-blue-100 text-lg font-medium">Lihat catatan presensi dan data pembelajaran Anda.</p>
       </div>
 
       {/* Filter Section */}
-      <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-8 mb-6 shadow-lg">
+      <div className="bg-linear-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-8 mb-6 shadow-lg">
         <h2 className="text-xl font-bold text-blue-900 mb-6 flex items-center">
           <div className="w-1 h-6 bg-blue-600 rounded-full mr-3"></div>
           Filter Data
@@ -183,7 +176,7 @@ const fetchHistoryData = async () => {
         {(searchQuery || startDate || endDate) && (
           <button
             onClick={handleClearFilters}
-            className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <X size={16} />
             Bersihkan Filter
@@ -194,7 +187,7 @@ const fetchHistoryData = async () => {
       {/* Loading State */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-16">
-          <div className="mb-4 p-4 rounded-full bg-gradient-to-r from-blue-500 to-blue-600">
+          <div className="mb-4 p-4 rounded-full bg-linear-to-r from-blue-500 to-blue-600">
             <Loader size={40} className="text-white animate-spin" />
           </div>
           <p className="text-blue-700 font-semibold">Memuat data presensi Anda...</p>
@@ -203,7 +196,7 @@ const fetchHistoryData = async () => {
 
       {/* Error State */}
       {error && !loading && (
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-2xl p-6 mb-6 shadow-md">
+        <div className="bg-linear-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-2xl p-6 mb-6 shadow-md">
           <p className="text-red-700 font-semibold text-lg">{error}</p>
         </div>
       )}
@@ -216,12 +209,12 @@ const fetchHistoryData = async () => {
       )}
 
       {/* History List */}
-      {!loading && histories.length > 0 ? (
+      {!loading && filteredHistory.length > 0 ? (
         <div className="grid grid-cols-1 gap-5">
-          {histories.map((item) => (
+          {filteredHistory.map((item) => (
             <div
               key={item.id}
-              className="bg-gradient-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-linear-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 {/* Date */}
@@ -262,7 +255,7 @@ const fetchHistoryData = async () => {
 
                 {/* Status Badge */}
                 <div className="flex items-end">
-                  <span className="px-4 py-2.5 rounded-full text-xs font-black text-white bg-gradient-to-r from-green-500 to-green-600 shadow-lg border-2 border-green-300">
+                  <span className="px-4 py-2.5 rounded-full text-xs font-black text-white bg-linear-to-r from-green-500 to-green-600 shadow-lg border-2 border-green-300">
                     ✓ {item.status || 'Hadir'}
                   </span>
                 </div>
@@ -271,7 +264,7 @@ const fetchHistoryData = async () => {
           ))}
         </div>
       ) : !loading && filteredHistory.length === 0 ? (
-        <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-16 text-center shadow-lg">
+        <div className="bg-linear-to-br from-white to-blue-50 rounded-2xl border-2 border-blue-200 p-16 text-center shadow-lg">
           <div className="mb-4 inline-block p-4 bg-blue-100 rounded-full">
             <Search size={48} className="text-blue-400" />
           </div>
