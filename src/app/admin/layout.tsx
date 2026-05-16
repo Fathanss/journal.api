@@ -43,6 +43,14 @@ export default function AdminLayout({
 
   return (
     <div className="flex h-screen" style={{backgroundColor: 'var(--background)'}}>
+      {/*  flex
+Mengaktifkan mode Flexbox. Ini adalah "fondasi" agar elemen-elemen di dalam div tersebut bisa diatur posisinya dengan mudah (misalnya dibuat sejajar ke samping atau ke bawah, ditaruh di tengah, dll).
+h-screen
+Singkatan dari Height: 100vh. Ini membuat tinggi div tersebut memenuhi seluruh layar perangkat pengguna (dari atas sampai bawah). Tanpa ini, tinggi div biasanya hanya akan mengikuti sebanyak apa konten di dalamnya.
+style={{backgroundColor: 'var(--background)'}}
+Meskipun ini bukan class name melainkan inline style, bagian ini berfungsi untuk:
+Memberikan warna latar belakang (background) pada elemen tersebut.
+Mengambil nilai warna dari CSS Variable bernama --background. Biasanya teknik ini digunakan agar warna bisa berubah otomatis saat berganti tema (misalnya dari Light Mode ke Dark Mode).*/}
       {/* Sidebar */}
       <aside
         className={`${
