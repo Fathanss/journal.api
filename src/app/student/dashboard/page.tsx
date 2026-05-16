@@ -2,44 +2,54 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import MainStudentLayout from "@/app/components/student/MainStudentLayout";
-import { CalendarCheck, Clock, Loader, Percent, Search, ShieldCheck, TrendingUp } from "lucide-react";
+import {
+  Calendar,
+  CalendarCheck,
+  Clock,
+  Loader,
+  Percent,
+  Search,
+  ShieldCheck,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
-type TodayPresence = {
+type TodaySchedule = {
   id: number | string;
-  scan_in?: string;
-  tanggal?: string;
+  mapel_id?: number;
+  class_id?: number;
+  teacher_id?: number;
   mapel_name?: string;
-  guru_name?: string;
+  teacher_name?: string;
+  class_name?: string;
+  start_at?: string;
+  end_at?: string;
+  date?: string;
 };
 //se client: Wajib digunakan karena kita menggunakan state
 //  (useState) dan lifecycle (useEffect) yang berjalan di browser.
 //  Tanpa ini, Next.js akan menganggap file ini sebagai komponen server dan tidak akan bisa menggunakan fitur-fitur tersebut.//
 
-
-
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [rows, setRows] = useState<TodayPresence[]>([]);
+  const [rows, setRows] = useState<TodaySchedule[]>([]);
 
   const STUDENT_ID = 2;
-// Fungsi untuk fetch data presensi hari ini dari API. Kita buat async function agar mudah menggunakan async/await dan menangani loading serta error dengan baik.//
+  // Fungsi untuk fetch data presensi hari ini dari API. Kita buat async function agar mudah menggunakan async/await dan menangani loading serta error dengan baik.//
   const fetchTodayPresence = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`/api/journal-student?student_id=${STUDENT_ID}&today_only=true`);
+      const res = await fetch(
+        `/api/schedule?student_id=${STUDENT_ID}&today_only=true`,
+      );
       const result = await res.json();
 
-      if (!result?.status) {
-        setRows([]);
-        setError(result?.message || "Gagal memuat data dashboard");
-        return;
+      if (result.status) {
+        setRows(Array.isArray(result.data) ? result.data : []);
       }
-
-      setRows(Array.isArray(result.data) ? result.data : []);
     } catch (e) {
       setRows([]);
       setError(e instanceof Error ? e.message : "Gagal memuat data dashboard");
@@ -48,68 +58,54 @@ export default function DashboardPage() {
     }
   };
 
-// Fetch data saat komponen pertama kali dimuat. Kita bisa tambahkan dependency lain jika ingin refetch saat kondisi tertentu berubah.//
-
+  // Fetch data saat komponen pertama kali dimuat. Kita bisa tambahkan dependency lain jika ingin refetch saat kondisi tertentu berubah.//
 
   useEffect(() => {
     fetchTodayPresence();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const stats = useMemo(() => {
-    const total = rows.length;
-
-    // Tidak ada field status khusus di data /api/journal-student yang dipakai presence.
-    // Maka metrik “tercatat” = jumlah data yang sukses tercatat.
-    // Kita asumsikan semua data yang datang dari API adalah data yang berhasil tercatat, karena API ini memang untuk menampilkan data presensi yang sudah terjadi. Jadi kita bisa langsung gunakan total sebagai jumlah yang tercatat.
-    const recorded = rows.length;
-
-    const uniqueMapel = new Set(rows.map((r) => r.mapel_name).filter(Boolean));
-    const uniqueTeachers = new Set(rows.map((r) => r.guru_name).filter(Boolean));
-
-// Untuk menghitung presence score, kita bisa buat rumus sederhana seperti:
-// presence_score = (jumlah mapel unik yang tercatat / total mapel hari itu) * 100
-// Namun karena kita tidak punya data total mapel hari itu, kita bisa buat asumsi:
-
-
-    const score = total === 0 ? 0 : Math.min(100, Math.round((recorded / Math.max(1, uniqueMapel.size)) * 50 + 50));
-
-    const lastThree = rows
-      .slice()
-      .sort((a, b) => {
-        const da = a.scan_in ? new Date(a.scan_in).getTime() : 0;
-        const db = b.scan_in ? new Date(b.scan_in).getTime() : 0;
-        return db - da;
-      })
-      .slice(0, 3);
-// Gunakan useMemo untuk menghitung statistik dari data yang sudah di-fetch. Ini membantu menghindari perhitungan ulang yang tidak perlu saat state lain berubah.//
-    return { total, recorded, uniqueMapelCount: uniqueMapel.size, uniqueTeachersCount: uniqueTeachers.size, score, lastThree };
-  }, [rows]);
-
   const formatTime = (datetime?: string) => {
     if (!datetime) return "-";
     try {
       const d = new Date(datetime);
-      return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+      return d.toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } catch {
       return "-";
     }
   };
 
+  // Add 'undefined' and 'null' to the parameter type
+  const formatDate = (datetime: string | undefined | null) => {
+    if (!datetime) return "-";
+    try {
+      const date = new Date(datetime);
+      return date.toLocaleDateString("id-ID", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    } catch {
+      return datetime; // Note: if datetime is null/undefined, it won't hit here because of the guard above
+    }
+  };
 
-// Gunakan useMemo untuk menghitung statistik dari data yang sudah di-fetch. Ini membantu menghindari perhitungan ulang yang tidak perlu saat state lain berubah.//
-
+  // Gunakan useMemo untuk menghitung statistik dari data yang sudah di-fetch. Ini membantu menghindari perhitungan ulang yang tidak perlu saat state lain berubah.//
 
   return (
     <MainStudentLayout>
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-black text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Ringkasan presensi hari ini dan akses cepat.</p>
+          <p className="text-gray-500 mt-1">
+            Ringkasan jadwal hari ini dan akses cepat.
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
-          
           <Link
             href="/student/history"
             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-800 font-semibold shadow-sm hover:border-gray-300 transition"
@@ -119,13 +115,14 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
-      
 
       {loading ? (
         <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
           <div className="flex items-center justify-center gap-3">
             <Loader className="animate-spin text-blue-600" />
-            <p className="text-gray-700 font-semibold">Memuat ringkasan presensi…</p>
+            <p className="text-gray-700 font-semibold">
+              Memuat ringkasan presensi…
+            </p>
           </div>
         </div>
       ) : error ? (
@@ -141,45 +138,78 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          
-
           {/* Quick list */}
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-lg font-black text-gray-900">Ringkasan hari ini</p>
-                  <p className="text-sm text-gray-500 mt-1">Maksimal 3 presensi terakhir.</p>
-                </div>
-                <Link
-                  href="/student/history"
-                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
-                >
-                  Lihat semua
-                </Link>
-              </div>
-
+              <p className="text-lg font-black text-gray-900">
+                Jadwal hari ini
+              </p>
+              
               <div className="mt-4 space-y-3">
-                {stats.lastThree.length === 0 ? (
+                {rows.length === 0 ? (
                   <div className="text-center py-10">
                     <div className="mx-auto w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
                       <Search size={20} />
                     </div>
-                    <p className="mt-3 font-semibold text-gray-800">Belum ada presensi hari ini</p>
-                    <p className="text-sm text-gray-500 mt-1">Silakan scan QR dari menu “Scan QR”.</p>
+                    <p className="mt-3 font-semibold text-gray-800">
+                      Belum ada presensi hari ini
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Silakan scan QR dari menu “Scan QR”.
+                    </p>
                   </div>
                 ) : (
-                  stats.lastThree.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                  rows.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100"
+                    >
                       <div className="min-w-0">
-                        <p className="font-bold text-gray-900 truncate">{item.mapel_name || "-"}</p>
-                        <p className="text-sm text-gray-600 truncate">{item.guru_name || "-"}</p>
+                        <p className="font-bold text-gray-900 truncate">
+                          {item.mapel_name || "-"}
+                        </p>
+                        <p className="text-sm text-gray-600 truncate">
+                          {item.teacher_name || "-"}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center">
-                          <Clock size={16} className="text-gray-700" />
+
+                      <div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                            ⏰ Waktu
+                          </span>
                         </div>
-                        <p className="font-semibold text-gray-800 whitespace-nowrap">{formatTime(item.scan_in)}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gray-900 truncate">
+                            {formatTime(item.start_at)} -{" "}
+                            {formatTime(item.end_at)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                          🏫 Kelas
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900 truncate">
+                            {item.class_name || "-"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col">
+                        <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                          📅 Tanggal
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Calendar size={18} className="text-blue-600" />
+                          </div>
+                          <span className="font-bold text-gray-800">
+                            {formatDate(item.date)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -189,7 +219,9 @@ export default function DashboardPage() {
 
             <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
               <p className="text-lg font-black text-gray-900">Akses cepat</p>
-              <p className="text-sm text-gray-500 mt-1">Buka menu penting tanpa cari-cari.</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Buka menu penting tanpa cari-cari.
+              </p>
 
               <div className="mt-4 space-y-3">
                 <Link
@@ -202,7 +234,9 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-900">Presence</p>
-                      <p className="text-sm text-gray-600">Scan QR untuk hari ini</p>
+                      <p className="text-sm text-gray-600">
+                        Scan QR untuk hari ini
+                      </p>
                     </div>
                   </div>
                   <span className="text-gray-400">→</span>
@@ -218,7 +252,9 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="font-bold text-gray-900">History</p>
-                      <p className="text-sm text-gray-600">Riwayat presensi & catatan</p>
+                      <p className="text-sm text-gray-600">
+                        Riwayat presensi & catatan
+                      </p>
                     </div>
                   </div>
                   <span className="text-gray-400">→</span>
@@ -251,4 +287,3 @@ export default function DashboardPage() {
     // Jangan lupa untuk menjaga konsistensi dengan desain dan pola yang sudah ada di aplikasi, serta memastikan bahwa dashboard ini memberikan nilai tambah bagi siswa dalam melihat ringkasan presensi mereka hari ini.//
   );
 }
-
