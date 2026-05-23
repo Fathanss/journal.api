@@ -61,7 +61,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Journal App</h2>
-          <p className="text-white text-opacity-90 text-sm">Masuk ke akun Anda</p>
+          <p className="text-white text-opacity-90 text-sm">Masuk ke Akun Anda</p>
         </div>
 
         {/* Form Card */}
@@ -114,7 +114,6 @@ export default function LoginPage() {
                   placeholder="Masukkan username Anda"
                   required
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:border-transparent outline-none transition-all duration-300 hover:border-gray-400"
-                  style={{focusRingColor: 'var(--accent-light-blue)'}}
                 />
               </div>
             </div>
@@ -146,7 +145,7 @@ export default function LoginPage() {
                   type="password"
                   name="password"
                   id="password"
-                  placeholder="••••••••"
+                  placeholder=""
                   required
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:border-transparent outline-none transition-all duration-300 hover:border-gray-400"
                 />

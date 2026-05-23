@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const search = searchParams.get("search") || "";
+    const classId = searchParams.get("class_id") || "";
 
     const offset = (page - 1) * limit;
 
@@ -79,6 +80,13 @@ export async function GET(request: NextRequest) {
       `;
       const keyword = `%${search}%`;
       params.push(keyword, keyword, keyword);
+    }
+
+    if (classId) {
+      whereClause = `
+      WHERE 
+        schedule.class_id = ${classId}
+      `;
     }
 
     const [countRows] = await pool.query<RowDataPacket[]>(

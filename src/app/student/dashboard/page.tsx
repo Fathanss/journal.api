@@ -1,5 +1,7 @@
 "use client";
 
+import Cookies from "js-cookie";
+import * as jose from "jose";
 import React, { useEffect, useMemo, useState } from "react";
 import MainStudentLayout from "@/app/components/student/MainStudentLayout";
 import {
@@ -11,6 +13,7 @@ import {
   Search,
   ShieldCheck,
   TrendingUp,
+  School,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -26,24 +29,67 @@ type TodaySchedule = {
   end_at?: string;
   date?: string;
 };
+
+interface StudentData {
+  name: string;
+  username: string;
+  class_id: number | string | null;
+  id: number | string | null;
+}
 //se client: Wajib digunakan karena kita menggunakan state
 //  (useState) dan lifecycle (useEffect) yang berjalan di browser.
 //  Tanpa ini, Next.js akan menganggap file ini sebagai komponen server dan tidak akan bisa menggunakan fitur-fitur tersebut.//
 
 export default function DashboardPage() {
+  let mStudentData = { name: "Guest", username: "unknown", id: null, class_id: null };
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<TodaySchedule[]>([]);
+  const [studentData, setStudentData] = useState<StudentData>(mStudentData);
 
-  const STUDENT_ID = 2;
+  useEffect(() => {
+    // 1. Define an async function inside the useEffect
+    const token = localStorage.getItem("student_session_token");
+    const studentSession = localStorage.getItem("student_data");
+    console.log("JWT token:", token);
+
+    const verifyToken = () => {
+      if (token && token !== "light") {
+        try {
+          
+          console.log("studentdata:", studentSession);
+          const studentSessionJson = JSON.parse(studentSession || "{}");
+
+          setStudentData(studentSessionJson);
+
+          fetchTodayPresence(studentSessionJson.class_id);
+
+        } catch (e) {
+          console.error("JWT verification failed:", e);
+          setError("Session invalid or expired");
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    // 2. Call the async function immediately
+    verifyToken();
+  }, []);
+
+
+
   // Fungsi untuk fetch data presensi hari ini dari API. Kita buat async function agar mudah menggunakan async/await dan menangani loading serta error dengan baik.//
-  const fetchTodayPresence = async () => {
+  const fetchTodayPresence = async (classId: string | number | null) => {
     try {
       setLoading(true);
       setError(null);
 
       const res = await fetch(
-        `/api/schedule?student_id=${STUDENT_ID}&today_only=true`,
+        `/api/schedule?class_id=${classId}&today_only=true`,
       );
       const result = await res.json();
 
@@ -58,12 +104,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Fetch data saat komponen pertama kali dimuat. Kita bisa tambahkan dependency lain jika ingin refetch saat kondisi tertentu berubah.//
-
-  useEffect(() => {
-    fetchTodayPresence();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const formatTime = (datetime?: string) => {
     if (!datetime) return "-";
@@ -101,7 +141,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-black text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">
-            Ringkasan jadwal hari ini dan akses cepat.
+            Halo <b>{studentData.name}</b> ! Ringkasan jadwal hari ini dan akses cepat.
           </p>
         </div>
 
@@ -130,7 +170,7 @@ export default function DashboardPage() {
           <p className="font-bold">Terjadi kesalahan</p>
           <p className="mt-1 text-sm">{error}</p>
           <button
-            onClick={fetchTodayPresence}
+            // onClick={fetchTodayPresence(studentData.class_id)}
             className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-red-300 hover:bg-red-100 transition font-semibold"
           >
             Coba lagi
@@ -144,7 +184,7 @@ export default function DashboardPage() {
               <p className="text-lg font-black text-gray-900">
                 Jadwal hari ini
               </p>
-              
+
               <div className="mt-4 space-y-3">
                 {rows.length === 0 ? (
                   <div className="text-center py-10">
@@ -164,51 +204,53 @@ export default function DashboardPage() {
                       key={item.id}
                       className="flex items-center justify-between gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100"
                     >
-                      <div className="min-w-0">
-                        <p className="font-bold text-gray-900 truncate">
-                          {item.mapel_name || "-"}
-                        </p>
-                        <p className="text-sm text-gray-600 truncate">
-                          {item.teacher_name || "-"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
-                            ⏰ Waktu
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                        <div className="min-w-0">
                           <p className="font-bold text-gray-900 truncate">
-                            {formatTime(item.start_at)} -{" "}
-                            {formatTime(item.end_at)}
+                            {item.mapel_name || "-"}
+                          </p>
+                          <p className="text-sm text-gray-600 truncate">
+                            {item.teacher_name || "-"}
                           </p>
                         </div>
-                      </div>
 
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
-                          🏫 Kelas
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-gray-900 truncate">
-                            {item.class_name || "-"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col">
-                        <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
-                          📅 Tanggal
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <div className="p-2 bg-blue-100 rounded-lg">
-                            <Calendar size={18} className="text-blue-600" />
+                        <div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                              ⏰ Waktu
+                            </span>
                           </div>
-                          <span className="font-bold text-gray-800">
-                            {formatDate(item.date)}
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-gray-900 truncate">
+                              {formatTime(item.start_at)} -{" "}
+                              {formatTime(item.end_at)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                            🏫 Kelas
                           </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-900 truncate">
+                              {item.class_name || "-"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                            📅 Tanggal
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <Calendar size={18} className="text-blue-600" />
+                            </div>
+                            <span className="font-bold text-gray-800">
+                              {formatDate(item.date)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>

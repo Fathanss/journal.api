@@ -65,13 +65,13 @@ Mengambil nilai warna dari CSS Variable bernama --background. Biasanya teknik in
             className={`font-bold text-lg tracking-wide transition-opacity ${
               !sidebarOpen && "opacity-0"
             }`}
-            style={{color: 'var(--primary-light-purple)'}}
+            style={{color: 'var(--black)'}}
           >
             Admin Panel
           </span>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-white/20 transition"
+            className="p-2 rounded-lg hover:bg-white/25 transition"
           >
             {sidebarOpen ? <FaTimes /> : <FaBars />}
           </button>
@@ -107,12 +107,12 @@ Mengambil nilai warna dari CSS Variable bernama --background. Biasanya teknik in
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t" style={{borderColor: 'var(--accent-light-blue)'}}>
+        <div className="p-4 border-t" style={{borderColor: 'var(--black)'}}>
           <button
             onClick={handleLogout}
             className="group flex items-center gap-3 w-full p-3 rounded-xl
-            hover:bg-red-300 transition-all"
-            style={{color: 'var(--primary-light-purple)'}}
+            hover:bg-white/25 transition-all"
+            style={{color: 'var(--black)'}}
           >
             <FaSignOutAlt className="text-xl group-hover:rotate-12 transition" />
             <span

@@ -201,13 +201,41 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { name } = await request.json();
+    const body = await request.json();
+    const { id, schedule_id, student_id, scan_in, scan_out, notes } = body;
 
-    return NextResponse.json({
-      status: true,
-      data: "put Method",
-    });
-  } catch (err) {
+    if (!id || !schedule_id || !student_id || !scan_in || !scan_out ) {
+      return NextResponse.json(
+        { status: false, message: "id, schedule, student_id, scan_in, scan_out is required" },
+        { status: 400 }
+      );
+    }
+
+    //update data
+    const [result] = await pool.query<ResultSetHeader>(
+      `UPDATE journal 
+      SET
+        schedule_id = ?, 
+        student_id = ?,
+        scan_in = ?, 
+        scan_out = ?, 
+        notes = ? 
+        WHERE id  = ?
+        `,
+      [schedule_id, student_id, scan_in, scan_out, notes, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { status: false, message: "No journal found with the provided id" },
+        { status: 404 }
+      );
+    }
+      return NextResponse.json({
+        status: true,
+        message: "Data was updated",
+      });
+    } catch (err) {
     console.error("Error in /api/journal PUT:", err);
     return NextResponse.json(
       {

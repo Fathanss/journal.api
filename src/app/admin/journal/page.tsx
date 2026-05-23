@@ -104,10 +104,12 @@ export default function FramesPage() {
 
     const handleEdit = (frame: any) => {
         setCurrentFrame({
-            ...frame,
-            // Ensure dates are formatted for <input type="datetime-local">
+            id: frame.id,
+            schedule_id: frame.schedule_id,
+            student_id: frame.student_id,
             scan_in: frame.scan_in ? frame.scan_in.slice(0, 16) : "",
-            scan_out: frame.scan_out ? frame.scan_out.slice(0, 16) : ""
+            scan_out: frame.scan_out ? frame.scan_out.slice(0, 16) : "",
+            notes: frame.notes || ""
         });
         setIsFormOpen(true);
     };
@@ -118,7 +120,7 @@ export default function FramesPage() {
 
         try {
             const isEdit = !!currentFrame.id;
-            const url = `/api/journal${isEdit ? `/${currentFrame.id}` : ''}`; // Standard REST pattern
+            const url = `/api/journal `;
             const method = isEdit ? "PUT" : "POST";
 
             const res = await fetch(url, {

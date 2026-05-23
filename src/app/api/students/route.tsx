@@ -2,6 +2,7 @@
 import pool from "@/app/lib/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcrypt";
 //id,name,username,created-at,updated-at//
 export async function POST(request: NextRequest) {
   try {
@@ -32,9 +33,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const [result] = await pool.query<ResultSetHeader>(
       "INSERT INTO students (name, username, password, class_id, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
-      [name, username, password, class_id],
+      [name, username, hashedPassword, class_id],
     );
 
     return NextResponse.json({
@@ -184,10 +187,25 @@ export async function PUT(request: NextRequest) {
         { status: 400 },
       );
     }
-    const [result] = await pool.query<ResultSetHeader>(
-      "UPDATE students SET name = ?, username = ?, password = ?, class_id = ?, updated_at = NOW() WHERE id = ?",
-      [name, username, password, class_id, id],
-    );
+
+    let result;
+
+    if (password && password.trim() !== "") {
+      // Scenario 1: Password is provided, hash it and update EVERYTHING
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      [result] = await pool.query<ResultSetHeader>(
+        "UPDATE students SET name = ?, username = ?, password = ?, class_id = ?, updated_at = NOW() WHERE id = ?",
+        [name, username, hashedPassword, class_id, id],
+      );
+    } else {
+      // Scenario 2: Password is empty, skip updating the password column
+      [result] = await pool.query<ResultSetHeader>(
+        "UPDATE students SET name = ?, username = ?, class_id = ?, updated_at = NOW() WHERE id = ?",
+        [name, username, class_id, id],
+      );
+    }
+
     if (result.affectedRows > 0) {
       return NextResponse.json({
         status: true,
@@ -199,10 +217,6 @@ export async function PUT(request: NextRequest) {
         message: "gagal mengupdate data",
       });
     }
-    return NextResponse.json({
-      status: true,
-      data: "put Method",
-    });
   } catch (err) {
     console.error("Error in /api/students PUT:", err);
     return NextResponse.json(

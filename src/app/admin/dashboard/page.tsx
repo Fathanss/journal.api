@@ -32,27 +32,38 @@ ChartJS.register(
 
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
+    const [summaryData, setSummaryData] = useState({
+        total_journal: 0,
+        count_late: 0,
+        count_on_time: 0,
+        total_mapel: 0,
+    });
 
-   // 2. Data for Bar Chart
-    const barData = {
-        labels: ["Kelas 10", "Kelas 11", "Kelas 12"],
-        datasets: [
-            {
-                label: "Jumlah Siswa",
-                data: [12, 19, 10],
-                backgroundColor: "rgba(59, 130, 246, 0.5)", // Blue
-                borderColor: "rgb(59, 130, 246)",
-                borderWidth: 1,
-            },
-        ],
-    };
+    useEffect(() => {
+        const fetchSummary = async () => {
+            try {
+                const res = await fetch("/api/summay-journal");
+                const result = await res.json();
+                if (result.status && result.data && result.data.length > 0) {
+                    setSummaryData(result.data[0]);
+                }
+            } catch (error) {
+                console.error("Error fetching summary:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSummary();
+    }, []);
 
-    // 3. Data for Pie Chart
+   
+
+    // 1. Data for Pie Chart
     const pieData = {
-        labels: ["Lunas", "Belum Bayar"],
+        labels: ["Tepat waktu", "Terlambat"],
         datasets: [
             {
-                data: [7, 3],
+                data: [summaryData.count_on_time, summaryData.count_late],
                 backgroundColor: [
                     "rgba(34, 197, 94, 0.5)", // Green
                     "rgba(239, 68, 68, 0.5)", // Red
@@ -62,134 +73,50 @@ export default function DashboardPage() {
             },
         ],
     };
-
-    //line chart//
-
-    const lineData = {
-        labels: ["100","90","80","70","60","50","40","30","20","10"],
-    datasets: [
-      {
-        label: "Nilai Siswa kelas 10",
-        data: [6, 4,3,4,2,3,9,4,6,10],
-        borderColor: [
-            "rgba(75, 192, 192, 1)",
-            "rgba(60, 484, 696, 1)"
-        ],
-
-        backgroundColor: [
-            "rgba(75, 192, 192, 0.2)",
-            "rgba(60, 484, 696, 0.2)"
-        ],
-        tension: 0.3,
-      },
-    ],
-  };
-  //line chart 2//
-  const lineData2 = {
-    labels: ["100","90","80","70","60","50","40","30","20","10"],
-    datasets: [ 
-        {
-        label: "Nilai Siswa kelas 11",
-        data: [5, 6,7,8,5,4,6,7,8,9],
-        borderColor: [
-            "rgba(153, 102, 255, 1)",
-            "rgba(201, 203, 207, 1)"
-        ],
-        backgroundColor: [
-            "rgba(153, 102, 255, 0.2)",
-            "rgba(201, 203, 207, 0.2)"
-        ],
-        tension: 0.3,
-      },
-    ],
-  };
-  //line chart 3//
-  const lineData3 = {
-    labels: ["100","90","80","70","60","50","40","30","20","10"],
-    datasets: [
-        {
-        label: "Nilai Siswa kelas 12",
-        data: [7, 8,6,5,4,3,2,1,4,6],
-        borderColor: [
-            "rgba(255, 159, 64, 1)",
-            "rgba(255, 205, 86, 1)"
-        ],
-        backgroundColor: [
-            "rgba(255, 159, 64, 0.2)",
-            "rgba(255, 205, 86, 0.2)"
-        ],
-        tension: 0.3,
-      },
-    ],
-  };
-
+   
 
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"> 
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Total Siswa</h3>
+                    <h3 className="text-gray-500 text-sm font-medium">Total Journal</h3>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
-                        10
+                        {summaryData.total_journal}
                     </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Total Guru</h3>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">
-                        11
+                    <h3 className="text-gray-500 text-sm font-medium">Terlambat</h3>
+                    <p className="text-3xl font-bold text-red-600 mt-2">
+                        {summaryData.count_late}
                     </p>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-500 text-sm font-medium">Paid Rate</h3>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">
-                        11
+                    <h3 className="text-gray-500 text-sm font-medium">Tepat Waktu</h3>
+                    <p className="text-3xl font-bold text-green-600 mt-2">
+                        {summaryData.count_on_time}
+                    </p>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-gray-500 text-sm font-medium">Total Mapel</h3>
+                    <p className="text-3xl font-bold text-blue-600 mt-2">
+                        {summaryData.total_mapel}
                     </p>
                 </div>
             </div>
 
              {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Bar Chart Container */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-700 font-semibold mb-4">Statistik Siswa per Kelas</h3>
-                    <div className="h-[300px] flex justify-center">
-                        <Bar data={barData} options={{ responsive: true, maintainAspectRatio: false}} />
-                    </div>
-                </div>
-
                 {/* Pie Chart Container */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-700 font-semibold mb-4">Status Pembayaran</h3>
+                    <h3 className="text-gray-700 font-semibold mb-4">Kedatangan siswa/siswi</h3>
                     <div className="h-[300px] flex justify-center">
                         <Pie data={pieData} options={{ responsive: true, maintainAspectRatio: false }} />
                     </div>
-                </div>
-                {/* line Container */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-700 font-semibold mb-4">Nilai siswa/siswi</h3>
-                    <div className="h-[300px] flex justify-center">
-                        <Line data={lineData} options={{ responsive: true, maintainAspectRatio: false }} />
-                    </div>
-                </div>
-                {/* line 2 Container */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-700 font-semibold mb-4">Nilai siswa/siswi</h3>
-                    <div className="h-[300px] flex justify-center">
-                        <Line data={lineData2} options={{ responsive: true, maintainAspectRatio: false }} />
-                    </div>
-                </div>
-                {/* line 3 Container */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-gray-700 font-semibold mb-4">Nilai siswa/siswi</h3>
-                    <div className="h-[300px] flex justify-center">
-                        <Line data={lineData3} options={{ responsive: true, maintainAspectRatio: false }} />
-                    </div>
-                </div>
+                </div> 
             </div>
-            
         </div>
     );
 } 
