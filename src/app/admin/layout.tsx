@@ -1,5 +1,6 @@
 "use client";
 
+import Swal from "sweetalert2";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -36,9 +37,54 @@ export default function AdminLayout({
     { name: "Journal", icon: FaPen, path: "/admin/journal" },
     { name: "Quick Scan", icon: FaQrcode, path: "/admin/quick-scan" },
   ];
+  const handleLogout = async () => {
+  
+          const result = await Swal.fire({
+              title: "Apakah kamu yakin?",
+              text: "Kamu akan keluar dari akun ini.",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#d33",
+              cancelButtonColor: "#3085d6",
+              confirmButtonText: "ya, keluar!",
+          });
+  
+          if (result.isConfirmed) {
+              try {
+                  handleRedirectLogout();
+              } catch (err) {
+                  Swal.fire("Error!", "Failed to delete record.", "error");
+              }
+          }
+      };
 
-  const handleLogout = () => {
-    router.push("/login");
+  const handleRedirectLogout = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+
+      if (token) {
+        const response = await fetch("/api/auth/admin-logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+
+        if (response.ok) {
+          // Clear localStorage
+          localStorage.removeItem("adminToken");
+          localStorage.removeItem("adminUser");
+          
+          // Redirect to login
+          router.push("/admin-login");
+        }
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Still clear local storage and redirect on error
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminUser");
+      router.push("/admin-login");
+    }
   };
 
   return (

@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -64,42 +66,66 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const search = searchParams.get("search") || "";
     const classId = searchParams.get("class_id") || "";
+    
+    // Tangkap parameter start_date dan end_date dari frontend
+    const startDate = searchParams.get("start_date") || "";
+    const endDate = searchParams.get("end_date") || "";
 
     const offset = (page - 1) * limit;
 
-    let whereClause = "";
+    // Array untuk menampung kondisi SQL secara dinamis
+    const conditions: string[] = [];
     const params: any[] = [];
 
+    // 1. Kondisi Pencarian (Search)
     if (search) {
-      whereClause = `
-      WHERE 
+      conditions.push(`(
         mapel.name LIKE ? OR 
         teacher.name LIKE ? OR 
         master_class.name LIKE ? OR
-        schedule.date LIKE ? 
-      `;
+        schedule.date LIKE ?
+      )`);
       const keyword = `%${search}%`;
-      params.push(keyword, keyword, keyword);
+      params.push(keyword, keyword, keyword, keyword); // Ditambah 1 keyword lagi karena ada 4 kolom LIKE
     }
 
+    // 2. Kondisi Class ID
     if (classId) {
-      whereClause = `
-      WHERE 
-        schedule.class_id = ${classId}
-      `;
+      conditions.push(`schedule.class_id = ?`);
+      params.push(classId);
     }
 
+    // 3. Kondisi Date Range (Rentang Tanggal)
+    if (startDate && endDate) {
+      conditions.push(`schedule.date BETWEEN ? AND ?`);
+      params.push(startDate, endDate);
+    } else if (startDate) {
+      conditions.push(`schedule.date >= ?`);
+      params.push(startDate);
+    } else if (endDate) {
+      conditions.push(`schedule.date <= ?`);
+      params.push(endDate);
+    }
+
+    // Gabungkan seluruh kondisi menjadi klausa WHERE tunggal yang valid
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    // Hitung total data untuk pagination menggunakan parameter yang sama
     const [countRows] = await pool.query<RowDataPacket[]>(
       `
       SELECT COUNT(*) AS total
       FROM schedule
+      INNER JOIN mapel ON schedule.mapel_id = mapel.id
+      INNER JOIN teacher ON schedule.teacher_id = teacher.id
+      LEFT JOIN master_class ON schedule.class_id = master_class.id
       ${whereClause}
       `,
       params,
     );
 
-    const total = countRows[0]?.total;
+    const total = countRows[0]?.total || 0;
 
+    // Ambil data rows dari database
     const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT
             schedule.id AS id,
@@ -121,7 +147,7 @@ export async function GET(request: NextRequest) {
         INNER JOIN teacher ON schedule.teacher_id = teacher.id
         LEFT JOIN master_class ON schedule.class_id = master_class.id
         ${whereClause}
-        ORDER BY schedule.created_at DESC
+        ORDER BY schedule.date ASC, schedule.start_at ASC
         LIMIT ? OFFSET ?`,
       [...params, limit, offset],
     );

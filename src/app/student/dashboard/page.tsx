@@ -36,20 +36,27 @@ interface StudentData {
   class_id: number | string | null;
   id: number | string | null;
 }
-//se client: Wajib digunakan karena kita menggunakan state
-//  (useState) dan lifecycle (useEffect) yang berjalan di browser.
-//  Tanpa ini, Next.js akan menganggap file ini sebagai komponen server dan tidak akan bisa menggunakan fitur-fitur tersebut.//
 
 export default function DashboardPage() {
   let mStudentData = { name: "Guest", username: "unknown", id: null, class_id: null };
+
+  // Helper fungsi untuk mendapatkan string tanggal format YYYY-MM-DD
+  const getFormattedDate = (offsetDays = 0) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().split("T")[0];
+  };
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<TodaySchedule[]>([]);
   const [studentData, setStudentData] = useState<StudentData>(mStudentData);
+  
+  // State baru untuk Date Range (Default: Hari ini s.d 7 hari ke depan)
+  const [startDate, setStartDate] = useState<string>(getFormattedDate(0));
+  const [endDate, setEndDate] = useState<string>(getFormattedDate(7));
 
   useEffect(() => {
-    // 1. Define an async function inside the useEffect
     const token = localStorage.getItem("student_session_token");
     const studentSession = localStorage.getItem("student_data");
     console.log("JWT token:", token);
@@ -57,13 +64,13 @@ export default function DashboardPage() {
     const verifyToken = () => {
       if (token && token !== "light") {
         try {
-          
           console.log("studentdata:", studentSession);
           const studentSessionJson = JSON.parse(studentSession || "{}");
 
           setStudentData(studentSessionJson);
-
-          fetchTodayPresence(studentSessionJson.class_id);
+          
+          // Fetch awal menggunakan tanggal default
+          fetchTodayPresence(studentSessionJson.class_id, startDate, endDate);
 
         } catch (e) {
           console.error("JWT verification failed:", e);
@@ -76,20 +83,29 @@ export default function DashboardPage() {
       }
     };
 
-    // 2. Call the async function immediately
     verifyToken();
   }, []);
 
+  // Memicu fetch ulang secara otomatis ketika filter tanggal berubah oleh user
+  useEffect(() => {
+    if (studentData.class_id) {
+      fetchTodayPresence(studentData.class_id, startDate, endDate);
+    }
+  }, [startDate, endDate]);
 
-
-  // Fungsi untuk fetch data presensi hari ini dari API. Kita buat async function agar mudah menggunakan async/await dan menangani loading serta error dengan baik.//
-  const fetchTodayPresence = async (classId: string | number | null) => {
+  // Fungsi fetch yang sudah terintegrasi dengan parameter tanggal eksternal
+  const fetchTodayPresence = async (
+    classId: string | number | null, 
+    start: string, 
+    end: string
+  ) => {
     try {
       setLoading(true);
       setError(null);
 
+      // Integrasi parameter ke API query string
       const res = await fetch(
-        `/api/schedule?class_id=${classId}&today_only=true`,
+        `/api/schedule?class_id=${classId}&start_date=${start}&end_date=${end}`,
       );
       const result = await res.json();
 
@@ -104,7 +120,6 @@ export default function DashboardPage() {
     }
   };
 
-
   const formatTime = (datetime?: string) => {
     if (!datetime) return "-";
     try {
@@ -118,7 +133,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Add 'undefined' and 'null' to the parameter type
   const formatDate = (datetime: string | undefined | null) => {
     if (!datetime) return "-";
     try {
@@ -129,11 +143,9 @@ export default function DashboardPage() {
         day: "2-digit",
       });
     } catch {
-      return datetime; // Note: if datetime is null/undefined, it won't hit here because of the guard above
+      return datetime;
     }
   };
-
-  // Gunakan useMemo untuk menghitung statistik dari data yang sudah di-fetch. Ini membantu menghindari perhitungan ulang yang tidak perlu saat state lain berubah.//
 
   return (
     <MainStudentLayout>
@@ -170,7 +182,7 @@ export default function DashboardPage() {
           <p className="font-bold">Terjadi kesalahan</p>
           <p className="mt-1 text-sm">{error}</p>
           <button
-            // onClick={fetchTodayPresence(studentData.class_id)}
+            onClick={() => fetchTodayPresence(studentData.class_id, startDate, endDate)}
             className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-red-300 hover:bg-red-100 transition font-semibold"
           >
             Coba lagi
@@ -178,12 +190,35 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Quick list */}
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
               <p className="text-lg font-black text-gray-900">
-                Jadwal hari ini
+                Jadwal harian
               </p>
+              
+              {/* --- AREA DATE RANGE YANG SUDAH DIPERBARUI --- */}
+              <div className="mt-3 flex flex-wrap items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Dari Tanggal</label>
+                  <input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:border-blue-500 font-medium"
+                  />
+                </div>
+                <div className="text-gray-400 self-end mb-2 hidden sm:block">s/d</div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Sampai Tanggal</label>
+                  <input 
+                    type="date" 
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:border-blue-500 font-medium"
+                  />
+                </div>
+              </div>
+              {/* ------------------------------------------- */}
 
               <div className="mt-4 space-y-3">
                 {rows.length === 0 ? (
@@ -192,10 +227,10 @@ export default function DashboardPage() {
                       <Search size={20} />
                     </div>
                     <p className="mt-3 font-semibold text-gray-800">
-                      Belum ada presensi hari ini
+                      Belum ada presensi pada rentang tanggal ini
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      Silakan scan QR dari menu “Scan QR”.
+                      Silakan ganti rentang tanggal atau scan QR dari menu “Scan QR”.
                     </p>
                   </div>
                 ) : (
@@ -232,11 +267,11 @@ export default function DashboardPage() {
                           <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
                             🏫 Kelas
                           </span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-900 truncate">
-                              {item.class_name || "-"}
-                            </span>
-                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900 truncate">
+                            {item.class_name || "-"}
+                          </span>
                         </div>
 
                         <div className="flex flex-col">
@@ -323,9 +358,5 @@ export default function DashboardPage() {
         </>
       )}
     </MainStudentLayout>
-    // Gunakan useMemo untuk menghitung statistik dari data yang sudah di-fetch. Ini membantu menghindari perhitungan ulang yang tidak perlu saat state lain berubah.//
-    // Catatan: untuk tugas ini, fokus utama adalah menampilkan data dari /api/journal-student dengan baik di dashboard. Kita tidak perlu membuat API baru atau mengubah data yang dikirim. Jadi kita akan menggunakan data yang ada untuk membuat ringkasan dan tampilan yang informatif bagi siswa.//
-    // Tugas ini juga menekankan pada penggunaan React hooks (useState, useEffect, useMemo) untuk mengelola state dan efek samping dengan baik, serta membuat UI yang responsif dan user-friendly.//
-    // Jangan lupa untuk menjaga konsistensi dengan desain dan pola yang sudah ada di aplikasi, serta memastikan bahwa dashboard ini memberikan nilai tambah bagi siswa dalam melihat ringkasan presensi mereka hari ini.//
   );
 }

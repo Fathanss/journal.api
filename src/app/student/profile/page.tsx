@@ -1,26 +1,64 @@
 "use client";
 
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MainStudentLayout from '@/app/components/student/MainStudentLayout';
 import { useRouter } from 'next/navigation';
 import { User, Lock, LogOut, Camera, Save } from 'lucide-react';
+import Swal from "sweetalert2";
 
+interface StudentData {
+  name: string;
+  username: string;
+  class_id: number | string | null;
+  id: number | string | null;
+}
 
 export default function ProfilePage() {
+    let mStudentData = { name: "Guest", username: "unknown", id: null, class_id: null };
+
  const router = useRouter();
- const [name, setName] = useState('Werdani Sulistya');
- const [password, setPassword] = useState('password123');
+ const [name, setName] = useState('');
+ const [password, setPassword] = useState('');
+const [studentData, setStudentData] = useState<StudentData>(mStudentData);
+ 
   const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
    e.preventDefault();
    alert('Profile updated successfully! (Dummy)');
  };
 
 
- const handleLogout = () => {
-   // Clear any local storage/session logic here
-   router.push('/login');
- };
+ const handleLogout = async () => {
+   
+           const result = await Swal.fire({
+               title: "Apakah kamu yakin?",
+               text: "Kamu akan keluar dari akun ini.",
+               icon: "warning",
+               showCancelButton: true,
+               confirmButtonColor: "#d33",
+               cancelButtonColor: "#3085d6",
+               confirmButtonText: "ya, keluar!",
+           });
+      
+            if (result.isConfirmed) {
+                try {
+                    // Clear token from localStorage
+                    localStorage.removeItem("studentToken");
+                    localStorage.removeItem("studentUser");
+                    router.push("/student-login");
+                }
+                catch (err) {
+                    Swal.fire("Error!", "Failed to logout.", "error");
+                }
+            }
+          }
+
+useEffect(() => {
+    const studentSession = localStorage.getItem("student_data");
+    const studentSessionJson = JSON.parse(studentSession || "{}");
+          setStudentData(studentSessionJson);
+          setName(studentSessionJson.name || "");
+  }, []);
 
 
  return (

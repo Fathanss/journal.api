@@ -18,7 +18,7 @@ export default function LoginPage() {
     const password = formData.get("password");
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/admin-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -28,6 +28,11 @@ export default function LoginPage() {
       setLoading(false);
 
       if (response.ok && result.status) {
+        // Store token in localStorage
+        if (result.token) {
+          localStorage.setItem("adminToken", result.token);
+          localStorage.setItem("adminUser", JSON.stringify(result.data));
+        }
         router.push("/admin/dashboard");
       } else {
         setError(result.message || "Invalid username or password");

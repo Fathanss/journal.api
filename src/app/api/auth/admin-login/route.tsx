@@ -57,14 +57,15 @@ export async function POST(request: NextRequest) {
         // 5. CREATE ACCESS TOKEN (Replaces prisma.access_tokens.create)
         // Note: Ensure your 'access_tokens' table structure matches these fields
         await connection.execute(
-            `INSERT INTO access_tokens (tokenable_type, tokenable_id, token, expires_at, name, created_at, updated_at) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO access_tokens (tokenable_type, tokenable_id, token, expires_at, name, role, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 'Next/User',
                 user.id,
                 token,
                 expiresAt,
                 user.name,
+                'admin',
                 now,
                 now
             ]

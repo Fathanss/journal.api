@@ -47,7 +47,7 @@ export default function LoginPage() {
   return (
     <div
       className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: "var(--background)" }}
+      style={{ backgroundColor: "#f8f9fa" }}
     >
       <div className="w-full max-w-md">
         {/* Header Card */}
@@ -55,11 +55,11 @@ export default function LoginPage() {
           className="rounded-t-3xl p-8 text-center shadow-lg"
           style={{
             background:
-              "linear-gradient(to right, var(--primary-light-blue), var(--secondary-light-blue))",
+              "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
           }}
         >
           <div className="mb-4">
-            <div className="inline-block bg-white bg-opacity-30 p-4 rounded-full">
+            <div className="inline-block bg-white bg-opacity-20 p-4 rounded-full">
               <svg
                 className="w-12 h-12 text-white"
                 fill="none"
@@ -76,13 +76,13 @@ export default function LoginPage() {
             </div>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Journal App</h2>
-          <p className="text-white text-opacity-90 text-sm">Masuk ke Admin</p>
+          <p className="text-white text-opacity-90 text-sm">Masuk ke Akun Anda</p>
         </div>
 
         {/* Form Card */}
         <div
           className="bg-white rounded-b-3xl p-8 shadow-xl border-t-4"
-          style={{ borderColor: "var(--accent-light-blue)" }}
+          style={{ borderColor: "#1e3a8a" }}
         >
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-lg mb-6 flex items-start">
@@ -112,7 +112,7 @@ export default function LoginPage() {
               <div className="relative">
                 <span
                   className="absolute inset-y-0 left-0 pl-3 flex items-center"
-                  style={{ color: "var(--accent-light-blue)" }}
+                  style={{ color: "#1e3a8a" }}
                 >
                   <svg
                     className="w-5 h-5"
@@ -149,7 +149,7 @@ export default function LoginPage() {
               <div className="relative">
                 <span
                   className="absolute inset-y-0 left-0 pl-3 flex items-center"
-                  style={{ color: "var(--accent-light-blue)" }}
+                  style={{ color: "#1e3a8a" }}
                 >
                   <svg
                     className="w-5 h-5"
@@ -182,7 +182,7 @@ export default function LoginPage() {
               className="w-full text-white font-bold py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
               style={{
                 background:
-                  "linear-gradient(to right, var(--accent-light-blue), var(--secondary-light-blue))",
+                  "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
               }}
             >
               {loading ? (
