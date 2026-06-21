@@ -12,10 +12,14 @@ import {
   Percent,
   Search,
   ShieldCheck,
-  TrendingUp,
-  School,
+  Users,
+  Book,
+  Star,
+  
+
 } from "lucide-react";
 import Link from "next/link";
+import { Teachers } from "next/font/google";
 
 type TodaySchedule = {
   id: number | string;
@@ -38,7 +42,12 @@ interface StudentData {
 }
 
 export default function DashboardPage() {
-  let mStudentData = { name: "Guest", username: "unknown", id: null, class_id: null };
+  let mStudentData = {
+    name: "Guest",
+    username: "unknown",
+    id: null,
+    class_id: null,
+  };
 
   // Helper fungsi untuk mendapatkan string tanggal format YYYY-MM-DD
   const getFormattedDate = (offsetDays = 0) => {
@@ -51,7 +60,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<TodaySchedule[]>([]);
   const [studentData, setStudentData] = useState<StudentData>(mStudentData);
-  
+
   // State baru untuk Date Range (Default: Hari ini s.d 7 hari ke depan)
   const [startDate, setStartDate] = useState<string>(getFormattedDate(0));
   const [endDate, setEndDate] = useState<string>(getFormattedDate(7));
@@ -68,10 +77,9 @@ export default function DashboardPage() {
           const studentSessionJson = JSON.parse(studentSession || "{}");
 
           setStudentData(studentSessionJson);
-          
+
           // Fetch awal menggunakan tanggal default
           fetchTodayPresence(studentSessionJson.class_id, startDate, endDate);
-
         } catch (e) {
           console.error("JWT verification failed:", e);
           setError("Session invalid or expired");
@@ -95,9 +103,9 @@ export default function DashboardPage() {
 
   // Fungsi fetch yang sudah terintegrasi dengan parameter tanggal eksternal
   const fetchTodayPresence = async (
-    classId: string | number | null, 
-    start: string, 
-    end: string
+    classId: string | number | null,
+    start: string,
+    end: string,
   ) => {
     try {
       setLoading(true);
@@ -153,19 +161,12 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-black text-gray-900">Dashboard</h1>
           <p className="text-gray-500 mt-1">
-            Halo <b>{studentData.name}</b> ! Ringkasan jadwal hari ini dan akses cepat.
+            Halo <b>{studentData.name}</b> ! Ringkasan jadwal hari ini dan akses
+            cepat.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/student/history"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-800 font-semibold shadow-sm hover:border-gray-300 transition"
-          >
-            <Clock size={18} />
-            Riwayat
-          </Link>
-        </div>
+        
       </div>
 
       {loading ? (
@@ -182,7 +183,9 @@ export default function DashboardPage() {
           <p className="font-bold">Terjadi kesalahan</p>
           <p className="mt-1 text-sm">{error}</p>
           <button
-            onClick={() => fetchTodayPresence(studentData.class_id, startDate, endDate)}
+            onClick={() =>
+              fetchTodayPresence(studentData.class_id, startDate, endDate)
+            }
             className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-red-300 hover:bg-red-100 transition font-semibold"
           >
             Coba lagi
@@ -192,26 +195,30 @@ export default function DashboardPage() {
         <>
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-              <p className="text-lg font-black text-gray-900">
-                Jadwal harian
-              </p>
-              
+              <p className="text-lg font-black text-gray-900">Jadwal harian</p>
+
               {/* --- AREA DATE RANGE YANG SUDAH DIPERBARUI --- */}
               <div className="mt-3 flex flex-wrap items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Dari Tanggal</label>
-                  <input 
-                    type="date" 
+                  <label className="text-xs font-bold text-gray-500 uppercase">
+                    Dari Tanggal
+                  </label>
+                  <input
+                    type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:border-blue-500 font-medium"
                   />
                 </div>
-                <div className="text-gray-400 self-end mb-2 hidden sm:block">s/d</div>
+                <div className="text-gray-400 self-end mb-2 hidden sm:block">
+                  s/d
+                </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-gray-500 uppercase">Sampai Tanggal</label>
-                  <input 
-                    type="date" 
+                  <label className="text-xs font-bold text-gray-500 uppercase">
+                    Sampai Tanggal
+                  </label>
+                  <input
+                    type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:border-blue-500 font-medium"
@@ -230,7 +237,8 @@ export default function DashboardPage() {
                       Belum ada presensi pada rentang tanggal ini
                     </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      Silakan ganti rentang tanggal atau scan QR dari menu “Scan QR”.
+                      Silakan ganti rentang tanggal atau scan QR dari menu “Scan
+                      QR”.
                     </p>
                   </div>
                 ) : (
@@ -239,23 +247,53 @@ export default function DashboardPage() {
                       key={item.id}
                       className="flex items-center justify-between gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100"
                     >
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                        <div className="min-w-0">
-                          <p className="font-bold text-gray-900 truncate">
-                            {item.mapel_name || "-"}
-                          </p>
-                          <p className="text-sm text-gray-600 truncate">
-                            {item.teacher_name || "-"}
-                          </p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                              Mata Pelajaran
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <Book size={18} className="text-blue-600" />
+                            </div>
+                            <p className="font-bold text-gray-900 truncate">
+                              {item.mapel_name || "-"}
+                            </p>
+                          </div>
                         </div>
 
                         <div>
                           <div className="flex flex-col">
                             <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
-                              ⏰ Waktu
+                              Guru
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <Star size={18} className="text-blue-600" />
+                            </div>
+                            <p className="font-bold text-gray-900 truncate">
+                              {item.teacher_name || "-"}
+                            </p>
+                          </div>
+                        </div>
+
+                        
+
+                        <div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
+                              Waktu
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <Clock size={18} className="text-blue-600" />
+                            </div>
                             <p className="font-bold text-gray-900 truncate">
                               {formatTime(item.start_at)} -{" "}
                               {formatTime(item.end_at)}
@@ -263,20 +301,26 @@ export default function DashboardPage() {
                           </div>
                         </div>
 
+                      <div>
                         <div className="flex flex-col">
                           <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
-                            🏫 Kelas
+                            Kelas
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Users size={18} className="text-blue-600" />
+                          </div>
                           <span className="font-bold text-gray-900 truncate">
                             {item.class_name || "-"}
                           </span>
                         </div>
+                      </div>
 
+                      <div>
                         <div className="flex flex-col">
                           <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">
-                            📅 Tanggal
+                            Tanggal
                           </span>
                           <div className="flex items-center gap-2">
                             <div className="p-2 bg-blue-100 rounded-lg">
@@ -287,6 +331,8 @@ export default function DashboardPage() {
                             </span>
                           </div>
                         </div>
+                      </div>
+
                       </div>
                     </div>
                   ))

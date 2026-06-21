@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import MainStudentLayout from '@/app/components/student/MainStudentLayout';
-import { Calendar, Clock, Search, X, Loader } from 'lucide-react';
+import { Calendar, Clock, Search, X, Loader, Book, Star } from 'lucide-react';
 
 interface HistoryRecord {
   id: number;
@@ -219,7 +219,7 @@ const fetchHistoryData = async () => {
               <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                 {/* Date */}
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">📅 Tanggal</span>
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1"> Tanggal</span>
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <Calendar size={18} className="text-blue-600" />
@@ -230,7 +230,7 @@ const fetchHistoryData = async () => {
 
                 {/* Presence Time */}
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">⏱️ Presensi</span>
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1"> Presensi</span>
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-green-100 rounded-lg">
                       <Clock size={18} className="text-green-600" />
@@ -241,14 +241,24 @@ const fetchHistoryData = async () => {
 
                 {/* Subject Name */}
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">📚 Pelajaran</span>
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">Pelajaran</span>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Book size={18} className="text-green-600" />
+                    </div>
                   <span className="font-bold text-gray-800 bg-blue-50 px-3 py-2 rounded-lg">{item.mapel_name || '-'}</span>
+                  </div>
                 </div>
 
                 {/* Teacher */}
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1">👨‍🏫 Guru</span>
+                  <span className="text-xs font-black text-blue-600 uppercase tracking-wider mb-1"> Guru</span>
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Star size={18} className="text-green-600" />
+                    </div>
                   <span className="font-bold text-gray-800 bg-blue-50 px-3 py-2 rounded-lg">{item.teacher_name || '-'}</span>
+                  </div>
                 </div>
 
                 

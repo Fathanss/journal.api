@@ -151,13 +151,13 @@ export default function PresencePage() {
                       <p className="text-sm text-gray-600">
                         {scan.teacher}
                       </p>
-                      <p className="text-sm text-gray-500 flex items-center gap-1">
-                        <Clock size={14} /> {scan.time}
-                      </p>
+                      
                     </div>
                   </div>
                   <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-700 rounded">
-                    Success
+                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <Clock size={14} /> {scan.time}
+                      </p>
                   </span>
                 </div>
               ))

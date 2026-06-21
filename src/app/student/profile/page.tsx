@@ -6,6 +6,7 @@ import MainStudentLayout from '@/app/components/student/MainStudentLayout';
 import { useRouter } from 'next/navigation';
 import { User, Lock, LogOut, Camera, Save } from 'lucide-react';
 import Swal from "sweetalert2";
+import Cookies from "js-cookie";
 
 interface StudentData {
   name: string;
@@ -45,6 +46,7 @@ const [studentData, setStudentData] = useState<StudentData>(mStudentData);
                     // Clear token from localStorage
                     localStorage.removeItem("studentToken");
                     localStorage.removeItem("studentUser");
+                    Cookies.remove("userRole");
                     router.push("/student-login");
                 }
                 catch (err) {
@@ -72,7 +74,7 @@ useEffect(() => {
 
      <div className="max-w-2xl bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
        {/* Profile Header Background */}
-       <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+       <div className="h-32 bg-linear-to-r from-blue-500 to-indigo-600"></div>
 
 
        <div className="p-8 -mt-16">

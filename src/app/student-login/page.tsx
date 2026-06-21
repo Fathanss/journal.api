@@ -26,16 +26,20 @@ export default function LoginPage() {
       });
 
       const result = await response.json();
-      setLoading(false);
-
       if (response.ok && result.status) {
         localStorage.setItem("student_session_token", result.token);
         localStorage.setItem("student_data", result.user ? JSON.stringify(result.user) : "");
+        localStorage.setItem("usersRole", JSON.stringify(result.role));
+        Cookies.set("userRole", "student");
+
+
         console.log("Login successful, token stored in localStorage:", result.token);
         setTimeout(function () {
           router.push("/student/dashboard");
         }, 3000);
       } else {
+        setLoading(false);
+
         setError(result.message || "Invalid username or password");
       }
     } catch (err) {
@@ -46,7 +50,7 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center"
+      className="min-h-screen flex items-center justify-center px-4"
       style={{ backgroundColor: "#f8f9fa" }}
     >
       <div className="w-full max-w-md">

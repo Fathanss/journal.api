@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,16 +26,19 @@ export default function LoginPage() {
       });
 
       const result = await response.json();
-      setLoading(false);
 
       if (response.ok && result.status) {
         // Store token in localStorage
         if (result.token) {
           localStorage.setItem("adminToken", result.token);
           localStorage.setItem("adminUser", JSON.stringify(result.data));
+          localStorage.setItem("usersRole", JSON.stringify(result.role));
+          Cookies.set("userRole", "admin");
+
         }
         router.push("/admin/dashboard");
       } else {
+        setLoading(false);
         setError(result.message || "Invalid username or password");
       }
     } catch (err) {
@@ -74,7 +78,7 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-4 rounded-lg mb-6 flex items-start">
               <svg
-                className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0"
+                className="w-5 h-5 mr-3 mt-0.5 shrink-0"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >

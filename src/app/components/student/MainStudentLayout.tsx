@@ -87,15 +87,15 @@ export default function MainStudentLayout({
 
       {/* Main Content Area */}
 
-      <main className="flex-1 ml-20 md:ml-0 overflow-auto p-4 md:p-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 min-h-full">
+      <main className="flex-1 overflow-auto p-3 md:p-8 pb-20 md:pb-0">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-lg p-4 md:p-8 min-h-full">
           {children}
         </div>
       </main>
 
       {/* Mobile Bottom Navigation (Hidden on Desktop) */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 shadow-2xl flex justify-around items-center h-16 px-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 shadow-2xl flex justify-around items-center h-16 px-1"
         style={{
           background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
         }}
@@ -104,21 +104,21 @@ export default function MainStudentLayout({
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-col items-center justify-center w-full h-full transition-all duration-300 rounded-xl mx-1 ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 rounded-lg ${
               pathname === item.href ? "" : ""
             }`}
             style={
               pathname === item.href
                 ? {
                     color: "white",
-                    backgroundColor: "rgba(255, 255, 255, 0.2)",
-                    borderRadius: "12px",
+                    backgroundColor: "rgba(255, 255, 255, 0.25)",
+                    borderRadius: "8px",
                   }
                 : { color: "rgba(255, 255, 255, 0.7)" }
             }
           >
-            <item.icon size={24} />
-            <span className="text-[10px] mt-1">{item.name}</span>
+            <item.icon size={20} />
+            <span className="text-[8px] mt-0.5 leading-tight">{item.name}</span>
           </Link>
         ))}
       </nav>

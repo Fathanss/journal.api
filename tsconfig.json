@@ -37,7 +37,7 @@
     "**/*.mts",
     ".next\\dev/types/**/*.ts",
     ".next\\dev/types/**/*.ts"
-, "src/app/api/teacher"  ],
+, "src/app/api/teacher", "proxy.js"  ],
   "exclude": [
     "node_modules"
   ]

@@ -1,5 +1,3 @@
-// /app/api/auth/login/route.js (or similar)
-
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
@@ -70,10 +68,9 @@ export async function POST(request: NextRequest) {
                 now
             ]
         );
-
         // 6. Return Successful Response
         return NextResponse.json(
-            { status: true, message: "Login successful", token, data: publicUser },
+            { status: true, message: "Login successful", token, data: publicUser, role: 'admin' },
             { status: 200 }
         );
 

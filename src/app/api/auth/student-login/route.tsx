@@ -1,5 +1,4 @@
 // /app/api/auth/login/route.js (or similar)
-
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
@@ -70,7 +69,10 @@ export async function POST(request: NextRequest) {
     );
 
     // 6. Return Successful Response
-    return response;
+    return NextResponse.json(
+      { status: true, message: "Login successful", token, data: publicUser, role: 'student' },
+      { status: 200 }
+    );
 
   } catch (error) {
     console.error("Login Error:", error);
