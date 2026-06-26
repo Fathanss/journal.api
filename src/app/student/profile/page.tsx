@@ -1,10 +1,10 @@
 "use client";
 
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import MainStudentLayout from '@/app/components/student/MainStudentLayout';
 import { useRouter } from 'next/navigation';
-import { User, Lock, LogOut, Camera, Save } from 'lucide-react';
+import { User, Lock, LogOut, Camera, Save, X } from 'lucide-react';
 import Swal from "sweetalert2";
 import Cookies from "js-cookie";
 
@@ -19,57 +19,123 @@ export default function ProfilePage() {
     let mStudentData = { name: "Guest", username: "unknown", id: null, class_id: null };
 
  const router = useRouter();
- const [name, setName] = useState('');
- const [password, setPassword] = useState('');
+ const fileInputRef = useRef<HTMLInputElement>(null);
+ const [switchUsername, setSwitchUsername] = useState('');
+ const [switchPassword, setSwitchPassword] = useState('');
  const [loading, setLoading] = useState(false);
+ const [uploadingPhoto, setUploadingPhoto] = useState(false);
+ const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+ const [photoUrl, setPhotoUrl] = useState<string | null>(null);
  const [studentData, setStudentData] = useState<StudentData>(mStudentData);
  
- const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
-   e.preventDefault();
+ const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   const file = e.target.files?.[0];
+   if (!file) return;
 
-   if (!name.trim()) {
-     Swal.fire('Oops', 'Nama tidak boleh kosong.', 'warning');
+   // Validate file type
+   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+   if (!allowedTypes.includes(file.type)) {
+     Swal.fire('Oops', 'Format file harus JPEG, PNG, GIF, atau WebP.', 'warning');
      return;
    }
 
-   if (!studentData.id) {
-     Swal.fire('Error', 'Data siswa tidak ditemukan. Silakan login ulang.', 'error');
+   // Validate file size (max 5MB)
+   if (file.size > 5 * 1024 * 1024) {
+     Swal.fire('Oops', 'Ukuran file maksimal 5MB.', 'warning');
+     return;
+   }
+
+   // Create preview
+   const reader = new FileReader();
+   reader.onloadend = () => {
+     setPhotoPreview(reader.result as string);
+   };
+   reader.readAsDataURL(file);
+
+   // Upload photo
+   setUploadingPhoto(true);
+   try {
+     const formData = new FormData();
+     formData.append('file', file);
+     formData.append('studentId', String(studentData.id));
+
+     const response = await fetch('/api/students/photo', {
+       method: 'POST',
+       body: formData,
+     });
+
+     const result = await response.json();
+
+     if (response.ok && result.status) {
+       setPhotoUrl(result.photoUrl);
+       Swal.fire('Berhasil', 'Foto profil berhasil diperbarui.', 'success');
+     } else {
+       Swal.fire('Gagal', result.message || 'Tidak dapat mengunggah foto.', 'error');
+       setPhotoPreview(null);
+     }
+   } catch (err) {
+     console.error('Photo upload error:', err);
+     Swal.fire('Error', 'Terjadi kesalahan saat mengunggah foto.', 'error');
+     setPhotoPreview(null);
+   } finally {
+     setUploadingPhoto(false);
+     if (fileInputRef.current) {
+       fileInputRef.current.value = '';
+     }
+   }
+ };
+
+ const handlePhotoButtonClick = () => {
+   fileInputRef.current?.click();
+ };
+
+ 
+ const handleSwitchAccount = async (e: React.FormEvent<HTMLFormElement>) => {
+   e.preventDefault();
+
+   if (!switchUsername.trim() || !switchPassword.trim()) {
+     Swal.fire('Oops', 'Username dan password akun tujuan wajib diisi.', 'warning');
      return;
    }
 
    setLoading(true);
 
    try {
-     const response = await fetch('/api/students', {
-       method: 'PUT',
+     const response = await fetch('/api/auth/student-login', {
+       method: 'POST',
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify({
-         id: studentData.id,
-         name: name.trim(),
-         username: studentData.username,
-         password: password.trim(),
-         class_id: studentData.class_id,
+         username: switchUsername.trim(),
+         password: switchPassword,
        }),
      });
 
      const result = await response.json();
 
      if (response.ok && result.status) {
-       const updatedStudent = {
-         ...studentData,
-         name: name.trim(),
-       };
+       localStorage.setItem('student_session_token', result.token);
+       localStorage.setItem('student_data', JSON.stringify(result.data));
+       localStorage.setItem('usersRole', JSON.stringify(result.role));
+       Cookies.set('userRole', 'student');
 
-       localStorage.setItem('student_data', JSON.stringify(updatedStudent));
-       setStudentData(updatedStudent);
-       setPassword('');
+       setStudentData(result.data);
+       setSwitchUsername('');
+       setSwitchPassword('');
 
-       Swal.fire('Berhasil', 'Profil berhasil diperbarui.', 'success');
+       Swal.fire({
+         title: 'Berhasil',
+         text: 'Akun berhasil diganti.',
+         icon: 'success',
+         timer: 1200,
+         showConfirmButton: false,
+       }).then(() => {
+         router.push('/student/dashboard');
+       });
      } else {
-       Swal.fire('Gagal', result.message || 'Tidak dapat memperbarui profil.', 'error');
+       Swal.fire('Gagal', result.message || 'Tidak dapat mengubah akun.', 'error');
      }
    } catch (err) {
-     console.error('Update profile error:', err);
+     console.error('Switch account error:', err);
      Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
    } finally {
      setLoading(false);
@@ -114,100 +180,99 @@ useEffect(() => {
     }
 
     setStudentData(studentSessionJson);
-    setName(studentSessionJson.name || "");
+
+    // Load existing photo
+    const photoPath = `/uploads/student_${studentSessionJson.id}.jpg`;
+    const photoPathPng = `/uploads/student_${studentSessionJson.id}.png`;
+    const photoPathGif = `/uploads/student_${studentSessionJson.id}.gif`;
+    const photoPathWebp = `/uploads/student_${studentSessionJson.id}.webp`;
+
+    // Try to load the photo by checking if it exists
+    fetch(photoPath, { method: 'HEAD' })
+      .then(() => setPhotoUrl(photoPath))
+      .catch(() => {
+        fetch(photoPathPng, { method: 'HEAD' })
+          .then(() => setPhotoUrl(photoPathPng))
+          .catch(() => {
+            fetch(photoPathGif, { method: 'HEAD' })
+              .then(() => setPhotoUrl(photoPathGif))
+              .catch(() => {
+                fetch(photoPathWebp, { method: 'HEAD' })
+                  .then(() => setPhotoUrl(photoPathWebp))
+                  .catch(() => setPhotoUrl(null));
+              });
+          });
+      });
   }, [router]);
 
 
  return (
    <MainStudentLayout>
-     {/* Header */}
      <div className="mb-8">
-       <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
-       <p className="text-gray-500">Manage your account settings and personal information.</p>
+       <h1 className="text-2xl font-bold text-gray-800">Switch Account</h1>
+       <p className="text-gray-500">Pindah ke akun pelajar lain dengan aman dan cepat.</p>
      </div>
 
+     <div className="max-w-2xl rounded-3xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+       <div className="h-28 bg-linear-to-r from-blue-600 via-indigo-600 to-sky-500"></div>
 
-     <div className="max-w-2xl bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-       {/* Profile Header Background */}
-       <div className="h-32 bg-linear-to-r from-blue-500 to-indigo-600"></div>
+       <div className="px-6 py-7 -mt-12 sm:px-8">
+        
 
-
-       <div className="p-8 -mt-16">
-         <form onSubmit={handleUpdate} className="space-y-6">
-          
-           {/* Profile Picture Section */}
-           <div className="flex flex-col items-center mb-8">
-             <div className="relative">
-               <div className="w-32 h-32 rounded-full border-4 border-white bg-gray-200 flex items-center justify-center overflow-hidden shadow-md">
-                 <User size={64} className="text-gray-400" />
-               </div>
-               <button
-                 type="button"
-                 className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border border-gray-100 text-blue-600 hover:bg-gray-50"
-               >
-                 <Camera size={20} />
-               </button>
-             </div>
-             <p className="mt-2 text-sm text-gray-500 font-medium">Change Photo</p>
-           </div>
-
-
-           {/* Form Fields */}
+         <form onSubmit={handleSwitchAccount} className="mt-6 space-y-5">
            <div className="space-y-4">
              <div>
-               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+               <label className="mb-1.5 block text-sm font-medium text-gray-700">Username akun tujuan</label>
                <div className="relative">
-                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                    <User size={18} />
                  </span>
                  <input
                    type="text"
-                   value={name}
-                   onChange={(e) => setName(e.target.value)}
-                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                   value={switchUsername}
+                   onChange={(e) => setSwitchUsername(e.target.value)}
+                   className="block w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-10 pr-3 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                   placeholder="Masukkan username akun lain"
                  />
                </div>
              </div>
 
-
              <div>
-               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+               <label className="mb-1.5 block text-sm font-medium text-gray-700">Password akun tujuan</label>
                <div className="relative">
-                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                 <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                    <Lock size={18} />
                  </span>
                  <input
                    type="password"
-                   value={password}
-                   onChange={(e) => setPassword(e.target.value)}
-                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                   value={switchPassword}
+                   onChange={(e) => setSwitchPassword(e.target.value)}
+                   className="block w-full rounded-xl border border-gray-300 bg-gray-50 py-3 pl-10 pr-3 text-sm text-gray-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                   placeholder="Masukkan password akun lain"
                  />
                </div>
              </div>
            </div>
 
-
-           {/* Action Buttons */}
-           <div className="flex flex-col gap-3 pt-4">
+           <div className="flex flex-col gap-3 pt-2">
              <button
                type="submit"
-               className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition"
+               disabled={loading}
+               className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
              >
                <Save size={18} />
-               Update Profile
+               {loading ? 'Menyambungkan...' : 'Ganti Akun'}
              </button>
-            
+
              <button
                type="button"
                onClick={handleLogout}
-               className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2.5 rounded-lg font-semibold hover:bg-red-100 transition"
+               className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100"
              >
                <LogOut size={18} />
                Logout
              </button>
            </div>
-
-
          </form>
        </div>
      </div>

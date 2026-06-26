@@ -188,21 +188,36 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const trimmedName = typeof name === "string" ? name.trim() : "";
+    const trimmedUsername = typeof username === "string" ? username.trim() : "";
+
+    if (!trimmedName) {
+      return NextResponse.json(
+        { status: false, message: "Name is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!trimmedUsername) {
+      return NextResponse.json(
+        { status: false, message: "Username is required" },
+        { status: 400 },
+      );
+    }
+
     let result;
 
     if (password && password.trim() !== "") {
-      // Scenario 1: Password is provided, hash it and update EVERYTHING
       const hashedPassword = await bcrypt.hash(password, 10);
 
       [result] = await pool.query<ResultSetHeader>(
         "UPDATE students SET name = ?, username = ?, password = ?, class_id = ?, updated_at = NOW() WHERE id = ?",
-        [name, username, hashedPassword, class_id, id],
+        [trimmedName, trimmedUsername, hashedPassword, class_id, id],
       );
     } else {
-      // Scenario 2: Password is empty, skip updating the password column
       [result] = await pool.query<ResultSetHeader>(
         "UPDATE students SET name = ?, username = ?, class_id = ?, updated_at = NOW() WHERE id = ?",
-        [name, username, class_id, id],
+        [trimmedName, trimmedUsername, class_id, id],
       );
     }
 

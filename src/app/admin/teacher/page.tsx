@@ -140,7 +140,7 @@ export default function FramesPage() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                             <input
-                                type="text"
+                                type="password"
                                 value={currentFrame.password}
                                 onChange={(e) => setCurrentFrame({ ...currentFrame, password: e.target.value })}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-fuchsia-500"
