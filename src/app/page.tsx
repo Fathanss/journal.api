@@ -1,4 +1,22 @@
+"use client";
+
+
+import {
+  Calendar,
+  CalendarCheck,
+  Clock,
+  Loader,
+  Percent,
+  Search,
+  ShieldCheck,
+  Users,
+  Book,
+  Star,
+} from "lucide-react";
 import Link from "next/link";
+
+
+
 
 export default function Home() {
   return (
@@ -84,12 +102,12 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: '', title: 'Dashboard Analytics', desc: 'Pantau semua data pembelajaran dalam satu dashboard intuitif' },
-              { icon: '', title: 'Manajemen Pengguna', desc: 'Kelola admin, guru, dan siswa dengan mudah dan terstruktur' },
-              { icon: '', title: 'Jadwal Terjadwal', desc: 'Atur jadwal pembelajaran dan kelas dengan sistem yang fleksibel' },
-              { icon: '', title: 'Tracking Presensi', desc: 'Catat dan pantau presensi siswa secara real-time' },
-              { icon: '', title: 'Jurnal Digital', desc: 'Buat dan kelola jurnal pembelajaran dengan fitur lengkap' },
-              { icon: '', title: 'Keamanan Terjamin', desc: 'Data tersimpan aman dengan enkripsi tingkat enterprise' },
+              { icon: <Calendar />, title: 'Dashboard Analytics', desc: 'Pantau semua data pembelajaran dalam satu dashboard intuitif' },
+              { icon: <Users />, title: 'Manajemen Pengguna', desc: 'Kelola admin, guru, dan siswa dengan mudah dan terstruktur' },
+              { icon: <Clock />, title: 'Jadwal Terjadwal', desc: 'Atur jadwal pembelajaran dan kelas dengan sistem yang fleksibel' },
+              { icon: <Search />, title: 'Tracking Presensi', desc: 'Catat dan pantau presensi siswa secara real-time' },
+              { icon: <Book />, title: 'Jurnal Digital', desc: 'Buat dan kelola jurnal pembelajaran dengan fitur lengkap' },
+              { icon: <ShieldCheck />, title: 'Keamanan Terjamin', desc: 'Data tersimpan aman dengan enkripsi tingkat enterprise' },
             ].map((feature, idx) => (
               <div key={idx} className="group bg-white rounded-xl p-8 border border-gray-200 hover:border-purple-300 hover:shadow-xl transition-all duration-300">
                 <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">{feature.icon}</div>

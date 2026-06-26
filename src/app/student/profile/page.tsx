@@ -21,11 +21,59 @@ export default function ProfilePage() {
  const router = useRouter();
  const [name, setName] = useState('');
  const [password, setPassword] = useState('');
-const [studentData, setStudentData] = useState<StudentData>(mStudentData);
+ const [loading, setLoading] = useState(false);
+ const [studentData, setStudentData] = useState<StudentData>(mStudentData);
  
-  const handleUpdate = (e: React.FormEvent<HTMLFormElement>) => {
+ const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
    e.preventDefault();
-   alert('Profile updated successfully! (Dummy)');
+
+   if (!name.trim()) {
+     Swal.fire('Oops', 'Nama tidak boleh kosong.', 'warning');
+     return;
+   }
+
+   if (!studentData.id) {
+     Swal.fire('Error', 'Data siswa tidak ditemukan. Silakan login ulang.', 'error');
+     return;
+   }
+
+   setLoading(true);
+
+   try {
+     const response = await fetch('/api/students', {
+       method: 'PUT',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         id: studentData.id,
+         name: name.trim(),
+         username: studentData.username,
+         password: password.trim(),
+         class_id: studentData.class_id,
+       }),
+     });
+
+     const result = await response.json();
+
+     if (response.ok && result.status) {
+       const updatedStudent = {
+         ...studentData,
+         name: name.trim(),
+       };
+
+       localStorage.setItem('student_data', JSON.stringify(updatedStudent));
+       setStudentData(updatedStudent);
+       setPassword('');
+
+       Swal.fire('Berhasil', 'Profil berhasil diperbarui.', 'success');
+     } else {
+       Swal.fire('Gagal', result.message || 'Tidak dapat memperbarui profil.', 'error');
+     }
+   } catch (err) {
+     console.error('Update profile error:', err);
+     Swal.fire('Error', 'Terjadi kesalahan server.', 'error');
+   } finally {
+     setLoading(false);
+   }
  };
 
 
@@ -43,9 +91,10 @@ const [studentData, setStudentData] = useState<StudentData>(mStudentData);
       
             if (result.isConfirmed) {
                 try {
-                    // Clear token from localStorage
-                    localStorage.removeItem("studentToken");
-                    localStorage.removeItem("studentUser");
+                    // Clear student session from localStorage
+                    localStorage.removeItem("student_session_token");
+                    localStorage.removeItem("student_data");
+                    localStorage.removeItem("usersRole");
                     Cookies.remove("userRole");
                     router.push("/student-login");
                 }
@@ -58,9 +107,15 @@ const [studentData, setStudentData] = useState<StudentData>(mStudentData);
 useEffect(() => {
     const studentSession = localStorage.getItem("student_data");
     const studentSessionJson = JSON.parse(studentSession || "{}");
-          setStudentData(studentSessionJson);
-          setName(studentSessionJson.name || "");
-  }, []);
+
+    if (!studentSessionJson || !studentSessionJson.id) {
+      router.push("/student-login");
+      return;
+    }
+
+    setStudentData(studentSessionJson);
+    setName(studentSessionJson.name || "");
+  }, [router]);
 
 
  return (
